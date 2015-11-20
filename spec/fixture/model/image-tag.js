@@ -1,5 +1,4 @@
 import { Model } from 'chaos-orm';
-import { Schema } from '../../../src';
 import Image from './image';
 import Tag from './tag';
 
@@ -10,20 +9,11 @@ class ImageTag extends Model {
     schema.set('image_id', { type: 'integer' });
     schema.set('tag_id', { type: 'integer' });
 
-    schema.bind('image', {
-      relation: 'belongsTo',
-      to: Image,
-      keys: { image_id: 'id' }
-    });
-
-    schema.bind('tag', {
-      relation: 'belongsTo',
-      to: Tag,
-      keys: { tag_id: 'id' }
-    });
+    schema.belongsTo('image', 'Image', { keys: { image_id: 'id' } });
+    schema.belongsTo('tag', 'Tag', { keys: { tag_id: 'id' } });
   }
 }
 
-ImageTag._schema = Schema;
+ImageTag.register();
 
 export default ImageTag;

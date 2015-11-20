@@ -1,5 +1,4 @@
 import { Model } from 'chaos-orm';
-import { Schema } from '../../../src';
 import Gallery from './gallery';
 
 class GalleryDetail extends Model {
@@ -9,14 +8,10 @@ class GalleryDetail extends Model {
     schema.set('description', { type: 'string' });
     schema.set('gallery_id', { type: 'integer' });
 
-    schema.bind('gallery', {
-      relation: 'belongsTo',
-      to: Gallery,
-      keys: { gallery_id: 'id' }
-    });
+    schema.belongsTo('gallery',  'Gallery', { keys: { gallery_id: 'id' } });
   }
 }
 
-GalleryDetail._schema = Schema
+GalleryDetail.register();
 
 export default GalleryDetail;
