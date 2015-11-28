@@ -63,7 +63,8 @@ class Schema extends BaseSchema {
     var primaryKey = this.primaryKey();
 
     if (data[primaryKey] === undefined) {
-      data[primaryKey] = this.connection().enabled('default') ? { ':plain' : 'default' } : null;
+      var constructor = this.connection().constructor;
+      data[primaryKey] = constructor.enabled('default') ? { ':plain' : 'default' } : null;
     }
 
     var insert = this.connection().dialect().statement('insert');
