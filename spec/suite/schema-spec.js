@@ -243,6 +243,18 @@ describe("Schema", function() {
 
   describe(".save()", function() {
 
+    it("saves empty entities", function(done) {
+
+      co(function*() {
+        var Image = this.image;
+        var image = Image.create();
+        expect(yield image.save()).toBe(image);
+        expect(image.exists()).toBe(true);
+        done();
+      }.bind(this));
+
+    });
+
     it("saves and updates an entity", function(done) {
 
       co(function*() {

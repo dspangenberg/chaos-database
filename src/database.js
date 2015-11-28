@@ -88,6 +88,7 @@ class Database extends Source {
     this.formatter('datasource', 'boolean',   handlers.datasource['boolean']);
     this.formatter('datasource', 'null',      handlers.datasource['null']);
     this.formatter('datasource', 'string',    handlers.datasource['quote']);
+    this.formatter('datasource', 'object',    handlers.datasource['object']);
     this.formatter('datasource', '_default_', handlers.datasource['quote']);
   }
 
@@ -191,13 +192,20 @@ class Database extends Source {
             value = new Date(value);
           }
           return this.dialect().quote(dateformat.asString(options.format, value));
-        },
+        }.bind(this),
         'boolean': function(value, options) {
           return value ? 'TRUE' : 'FALSE';
         },
         'null': function(value, options) {
           return 'NULL';
-        }
+        },
+        'object': function(value, options) {
+          var key = Object.keys(value)[0];
+          if (this.dialect().isOperator(key)) {
+            return this.dialect().format(key, value[key]);
+          }
+          return String(value);
+        }.bind(this)
       }
     };
   }

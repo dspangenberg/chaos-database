@@ -60,6 +60,12 @@ class Schema extends BaseSchema {
    * @return Boolean            Returns `true` if the update operation succeeded, otherwise `false`.
    */
   insert(data, options) {
+    var primaryKey = this.primaryKey();
+
+    if (data[primaryKey] === undefined) {
+      data[primaryKey] = this.connection().enabled('default') ? { ':plain' : 'default' } : null;
+    }
+
     var insert = this.connection().dialect().statement('insert');
     insert.into(this.source())
           .values(data);
