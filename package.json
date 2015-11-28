@@ -1,6 +1,6 @@
 {
   "name": "chaos-database",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "description": "Chaos ORM base classes for SQL based adapter.",
   "license": "MIT",
   "repository": {
