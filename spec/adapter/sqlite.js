@@ -16,15 +16,16 @@ class Sqlite extends Database {
    * @return Boolean          Returns `true` if the particular feature (or if MySQL) support
    *                          is enabled, otherwise `false`.
    */
-  enabled() {
-    if (feature === undefined) {
-      return true;
-    }
+  enabled(feature) {
     var features = {
       arrays: false,
       transactions: true,
-      booleans: true
+      booleans: true,
+      default: false
     };
+    if (!arguments.length) {
+      return extend({}, features);
+    }
     return features[feature];
   }
 
@@ -154,9 +155,9 @@ class Sqlite extends Database {
 
       var response = function(err, data) {
         if (err) {
-          reject(err);
+          return reject(err);
         }
-        if (typeof this.lastID !== undefined) {
+        if (this !== undefined) {
           self._lastInsertId = this.lastID;
         }
         accept(data ? new cursor({ data: data }) : data);

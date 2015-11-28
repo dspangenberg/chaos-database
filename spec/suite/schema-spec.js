@@ -12,8 +12,6 @@ import ImageFixture from '../fixture/schema/image-fixture';
 import ImageTagFixture from '../fixture/schema/image-tag-fixture';
 import TagFixture from '../fixture/schema/tag-fixture';
 
-
-
 describe("Schema", function() {
 
   beforeEach(function(done) {
@@ -485,6 +483,39 @@ describe("Schema", function() {
       }.bind(this)).then(function() {
         done();
       });
+
+    });
+
+    it("validates by default", function(done) {
+
+      co(function*() {
+        var Image = this.image;
+        var image = Image.create();
+        Image.validator().rule('name', 'not:empty');
+
+        expect(yield image.save()).toBe(false);
+        expect(image.exists()).toBe(false);
+        done();
+      }.bind(this));
+
+    });
+
+    it("validates direct relationships by default", function(done) {
+
+      co(function*() {
+        var Gallery = this.gallery;
+        Gallery.validator().rule('name', 'not:empty');
+
+        var Image = this.image;
+        var image = Image.create({
+          name: 'amiga_1200.jpg',
+          title: 'Amiga 1200',
+          gallery: {}
+        });
+        expect(yield image.save()).toBe(false);
+        expect(image.exists()).toBe(false);
+        done();
+      }.bind(this));
 
     });
 

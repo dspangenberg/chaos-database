@@ -21,11 +21,11 @@
     "cleanup": "rm -rf ./coverage"
   },
   "dependencies": {
-    "chaos-orm": "^0.1.4",
+    "chaos-orm": "^1.0",
     "co": "^4.6.0",
     "date-format": "0.0.2",
     "extend-merge": "^1.0.3",
-    "sql-dialect": "^1.0.2"
+    "sql-dialect": "^1.0"
   },
   "main": "lib/index.js",
   "jsnext:main": "src/index.js",
