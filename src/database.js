@@ -1,8 +1,9 @@
 import co from 'co';
+import dateformat from 'date-format';
 import { extend, merge } from 'extend-merge';
 import { Dialect } from 'sql-dialect';
-import { Cursor, Source } from 'chaos-orm';
-import dateformat from 'date-format';
+import { Source } from 'chaos-orm';
+import Cursor from './cursor';
 import Schema from './schema';
 
 /**

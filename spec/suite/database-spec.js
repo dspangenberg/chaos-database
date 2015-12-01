@@ -1,6 +1,6 @@
 import { Database, Schema } from '../../src';
 import { Dialect } from 'sql-dialect';
-import { Cursor, Source } from 'chaos-orm';
+import { Source } from 'chaos-orm';
 
 describe("Database", function() {
 

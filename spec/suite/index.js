@@ -5,6 +5,7 @@ import { Schema } from '../../src';
 
 Model.schema(Schema);
 
+require('./cursor-spec');
 require('./database-spec');
 require('./query-spec');
 require('./schema-spec');
