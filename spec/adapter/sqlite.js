@@ -5,16 +5,15 @@ import { Database } from '../../src';
 import { Sqlite as SqliteDialect } from 'sql-dialect';
 
 /**
- * MySQL adapter
+ * SQLite adapter
  */
 class Sqlite extends Database {
   /**
    * Check for required PHP extension, or supported database feature.
    *
    * @param  String  feature Test for support for a specific feature, i.e. `"transactions"`
-   *                          or `"arrays"`.
-   * @return Boolean          Returns `true` if the particular feature (or if MySQL) support
-   *                          is enabled, otherwise `false`.
+   *                         or `"arrays"`.
+   * @return Boolean         Returns `true` if the particular feature is supported, `false` otherwise.
    */
   static enabled(feature) {
     var features = {
@@ -30,11 +29,11 @@ class Sqlite extends Database {
   }
 
   /**
-   * Constructs the MySQL adapter and sets the default port to 3306.
+   * Constructs the SQLite adapter and sets the default port to 3306.
    *
    * @param Object config Configuration options for this class. Available options
    *                      defined by this class:
-   *                      - `'host'`: _string_ The IP or machine name where MySQL is running,
+   *                      - `'host'`: _string_ The IP or machine name where SQLite is running,
    *                                  followed by a colon, followed by a port number or socket.
    *                                  Defaults to `'localhost'`.
    */
@@ -47,7 +46,7 @@ class Sqlite extends Database {
       mode : sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
       connect: true,
       alias: true,
-      driver: undefined,
+      client: undefined,
       dialect: true
     };
     config = merge({}, defaults, config);
@@ -65,7 +64,14 @@ class Sqlite extends Database {
      *
      * @var Function
      */
-    this._driver = config.driver;
+    this._client = config.client;
+
+    /**
+     * Whether the client is connected or not.
+     *
+     * @var Boolean
+     */
+    this._connected = false;
 
     /**
      * The SQL dialect instance.
@@ -85,19 +91,15 @@ class Sqlite extends Database {
         }.bind(this)
       });
     }
-
-    if (this._config.connect) {
-      this.connect();
-    }
   }
 
   /**
-   * Returns the pdo connection instance.
+   * Returns the client instance.
    *
    * @return Function
    */
-  driver() {
-    return this._driver;
+  client() {
+    return this._client;
   }
 
   /**
@@ -107,24 +109,27 @@ class Sqlite extends Database {
    *                 otherwise `false`.
    */
   connect() {
-    if (this._driver) {
-      return this._driver;
+    if (this._client) {
+      return Promise.resolve(this._client);
     }
 
     var config = this.config();
 
     if (!config.database) {
-      throw new Error('Error, no database name has been configured.');
+      return Promise.reject(new Error('Error, no database name has been configured.'));
     }
 
+    var self = this;
+
     return new Promise(function(accept, reject) {
-      this._driver = new sqlite3.Database(config.database, config.mode, function(err) {
+      var client = self._client = new sqlite3.Database(config.database, config.mode, function(err) {
         if (err) {
-          reject(new Error('Unable to connect to host , error ' + err.code + ' ' + err.stack));
+          return reject(new Error('Unable to connect, error ' + err.code + ' ' + err.stack));
         }
-        accept(this._driver)
-      }.bind(this));
-    }.bind(this));
+        self._connected = true;
+        accept(client)
+      });
+    });
   }
 
   /**
@@ -135,7 +140,7 @@ class Sqlite extends Database {
    *                 otherwise been dropped by the remote resource during the course of the request.
    */
   connected() {
-    return !!this._driver;
+    return this._connected;
   }
 
   /**
@@ -143,7 +148,8 @@ class Sqlite extends Database {
    *
    * @param  string sql  SQL query to execute.
    * @param  array  data Array of bound parameters to use as values for query.
-   * @return object       A `Cursor` instance.
+   *                     WARNING data must be clean at this step. SQL injection must be handled earlier.
+   * @return object      A `Cursor` instance.
    */
   query(sql, data, options) {
     var self = this;
@@ -155,19 +161,21 @@ class Sqlite extends Database {
 
       var response = function(err, data) {
         if (err) {
-          return reject(false);
+          return reject(err);
         }
-        if (this !== undefined) {
+        if (typeof this.lastID !== undefined) {
           self._lastInsertId = this.lastID;
         }
         accept(data ? new cursor({ data: data }) : true);
       };
 
-      if (sql.match(/SELECT/i)) {
-        self.driver().all(sql, response);
-      } else {
-        self.driver().run(sql, response);
-      }
+      self.connect().then(function(client) {
+        if (sql.match(/^(SELECT|PRAGMA)/i)) {
+          client.all(sql, response);
+        } else {
+          client.run(sql, response);
+        }
+      });
     });
   }
 
@@ -202,8 +210,9 @@ class Sqlite extends Database {
    * @return Function        Returns a shema definition.
    */
   describe(name, fields, meta) {
+    var nbargs = arguments.length;
     return co(function*() {
-      if (arguments.length === 1) {
+      if (nbargs === 1) {
         fields = yield this.fields(name);
       }
 
@@ -226,60 +235,62 @@ class Sqlite extends Database {
    */
   fields(name) {
     return co(function*() {
-      var fields = {};
+      var tmp, fields = [];
       var columns = yield this.query('PRAGMA table_info(' + name +')');
-
-      for (var key in columns) {
-        var column = columns[key];
-        var field = this._column(column.type);
-        var dft = column.dflt_value;
+      for (var column of columns) {
+        var field = this._field(column);
+        var dflt = column.dflt_value;
 
         switch (field.type) {
-          case 'boolean':
-            if (dft === '1') {
-              dft = true;
-            }
-            if (dft === '0') {
-              dft = false;
+          case 'string':
+            var matches = typeof dflt === 'string' ? dflt.match(/^'(.*)'/) : null;
+            if (matches) {
+              dflt = matches[1];
             }
             break;
-          case 'timestamp':
-            dft = dft !== 'CURRENT_TIMESTAMP' ? dft : null;
+          case 'boolean':
+            dflt = dflt === 'TRUE';
+            break;
+          case 'datetime':
+            dflt = dflt !== 'CURRENT_TIMESTAMP' ? dflt : null;
             break;
         }
 
-        fields[column.name] = extend({}, {
-          null: (column.notnull === '1' ? false : true),
-          'default': dft
+        tmp = {};
+        tmp[column.name] = extend({}, {
+          null: (column.notnull === 0 ? true : false),
+          'default': dflt
         }, field);
+
+        fields.push(tmp);
       }
       return fields;
-    });
+    }.bind(this));
   }
 
   /**
-   * Converts database-layer column types to basic types.
+   * Converts database-layer column to a generic field.
    *
-   * @param  string real Real database-layer column type (i.e. `"varchar(255)"`)
-   * @return array        Column type (i.e. "string") plus 'length' when appropriate.
+   * @param  Object column Database-layer column.
+   * @return Object        A generic field.
    */
-  _column(real) {
-    var matches = real.match(/(?\w+)(?:\((?[\d,]+)\))?/);
-    var column = {};
-    column.type = matches[1];
-    column.length = matches[2];
-    column.use = column.type;
+  _field(column) {
+    var matches = column.type.match(/(\w+)(?:\(([\d,]+)\))?/);
+    var field = {};
+    field.type = matches[1];
+    field.length = matches[2];
+    field.use = field.type;
 
-    if (column.length) {
-      var length = column.length.split(',');
-      column.length = Number.parseInt(length[0]);
+    if (field.length) {
+      var length = field.length.split(',');
+      field.length = Number.parseInt(length[0]);
       if (length[1]) {
-        column.precision = Number.parseInt(length[1]);
+        field.precision = Number.parseInt(length[1]);
       }
     }
 
-    column.type = this.dialect().mapped(column);
-    return column;
+    field.type = this.dialect().mapped(field);
+    return field;
   }
 
   /**
@@ -288,8 +299,12 @@ class Sqlite extends Database {
    * @return Boolean Returns `true` on success, else `false`.
    */
   disconnect() {
-    this.driver().close();
-    this._driver = undefined;
+    if (!this._client) {
+      return true;
+    }
+    this._client.close();
+    this._client = undefined;
+    this._connected = false;
     return true;
   }
 }
