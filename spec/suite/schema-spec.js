@@ -248,7 +248,7 @@ describe("Schema", function() {
       co(function*() {
         var Image = this.image;
         var image = Image.create();
-        expect(yield image.save()).toBe(image);
+        expect(yield image.save()).toBe(true);
         expect(image.exists()).toBe(true);
         done();
       }.bind(this));
@@ -265,7 +265,7 @@ describe("Schema", function() {
 
         var Image = this.image;
         var image = Image.create(data);
-        expect(yield image.save()).toBe(image);
+        expect(yield image.save()).toBe(true);
         expect(image.exists()).toBe(true);
         expect(image.primaryKey()).not.toBe(null);
 
@@ -278,7 +278,7 @@ describe("Schema", function() {
         });
 
         reloaded.set('title', 'Amiga 1260');
-        expect(yield reloaded.save()).toBe(reloaded);
+        expect(yield reloaded.save()).toBe(true);
         expect(reloaded.exists()).toBe(true);
         expect(reloaded.primaryKey()).toBe(image.primaryKey());
 
@@ -308,7 +308,7 @@ describe("Schema", function() {
 
         var Gallery = this.gallery;
         var gallery = Gallery.create(data);
-        expect(yield gallery.save()).toBe(gallery);
+        expect(yield gallery.save()).toBe(true);
 
         expect(gallery.primaryKey()).not.toBe(null);
         for (var image of gallery.get('images')) {
@@ -336,7 +336,7 @@ describe("Schema", function() {
 
         var Image = this.image;
         var image = Image.create(data);
-        expect(yield image.save()).toBe(image);
+        expect(yield image.save()).toBe(true);
 
         expect(image.primaryKey()).not.toBe(null);
         expect(image.get('gallery').primaryKey()).toBe(image.get('gallery_id'));
@@ -362,7 +362,7 @@ describe("Schema", function() {
         var Gallery = this.gallery;
         var gallery = Gallery.create(data);
 
-        expect(yield gallery.save()).toBe(gallery);
+        expect(yield gallery.save()).toBe(true);
 
         expect(gallery.primaryKey()).not.toBe(null);
         expect(gallery.get('detail').get('gallery_id')).toBe(gallery.primaryKey());
@@ -433,7 +433,7 @@ describe("Schema", function() {
           reloaded.get('tags').unset(0);
           expect(reloaded.get('tags').count()).toBe(3);
 
-          expect(yield reloaded.save()).toBe(reloaded);
+          expect(yield reloaded.save()).toBe(true);
 
           var persisted = yield Image.id(reloaded.primaryKey(), { embed: ['tags'] });
 
@@ -472,7 +472,7 @@ describe("Schema", function() {
 
         var Gallery = this.gallery;
         var gallery = Gallery.create(data);
-        expect(yield gallery.save({ embed: 'images.tags' })).toBe(gallery);
+        expect(yield gallery.save({ embed: 'images.tags' })).toBe(true);
 
         expect(gallery.primaryKey()).not.toBe(null);
         expect(gallery.get('images').count()).toBe(1);
@@ -565,7 +565,7 @@ describe("Schema", function() {
 
         var spy = spyOn(image, 'save').and.callThrough();
 
-        expect(yield image.persist({ custom: 'option' })).toBe(image);
+        expect(yield image.persist({ custom: 'option' })).toBe(true);
         expect(image.exists()).toBe(true);
         expect(image.primaryKey()).not.toBe(null);
 
@@ -595,7 +595,7 @@ describe("Schema", function() {
         var Image = this.image;
         var image = Image.create(data);
 
-        expect(yield image.save()).toBe(image);
+        expect(yield image.save()).toBe(true);
         expect(image.exists()).toBe(true);
 
         yield image.delete();

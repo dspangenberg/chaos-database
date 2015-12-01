@@ -155,12 +155,12 @@ class Sqlite extends Database {
 
       var response = function(err, data) {
         if (err) {
-          return reject(err);
+          return reject(false);
         }
         if (this !== undefined) {
           self._lastInsertId = this.lastID;
         }
-        accept(data ? new cursor({ data: data }) : data);
+        accept(data ? new cursor({ data: data }) : true);
       };
 
       if (sql.match(/SELECT/i)) {
