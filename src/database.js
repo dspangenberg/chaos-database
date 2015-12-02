@@ -62,6 +62,13 @@ class Database extends Source {
     this._classes = extend({}, this.constructor._classes, config.classes);
 
     /**
+     * The last inserted record ID.
+     *
+     * @var mixed
+     */
+    this._lastInsertId = undefined;
+
+    /**
      * Stores configuration information for object instances at time of construction.
      *
      * @var Object
@@ -222,6 +229,15 @@ class Database extends Source {
   format(mode, type, value, options) {
     var type = (mode === 'datasource' && value === null) ? 'null' : type;
     return super.format(mode, type, value, options);
+  }
+
+  /**
+   * Returns the last inserted record ID from the database.
+   *
+   * @return mixed The last inserted record ID.
+   */
+  lastInsertId() {
+    return this._lastInsertId;
   }
 }
 
