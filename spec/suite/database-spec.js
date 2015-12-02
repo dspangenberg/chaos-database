@@ -16,6 +16,22 @@ describe("Database", function() {
     });
   });
 
+  describe(".constructor()", function() {
+
+    it("correctly sets default values", function() {
+
+      expect(this.database.config()).toEqual({
+        host: 'localhost',
+        options: {},
+        meta: { key: 'id', locked: true }
+      });
+
+      expect(this.database.lastInsertId()).toBe(undefined);
+
+    });
+
+  });
+
   describe(".config()", function() {
 
     it("returns the default config", function() {
@@ -24,8 +40,6 @@ describe("Database", function() {
 
       expect(database.config()).toEqual({
         host: 'localhost',
-        username: 'root',
-        password: '',
         options: {},
         meta: { key: 'id', locked: true }
       });

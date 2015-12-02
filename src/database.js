@@ -45,8 +45,8 @@ class Database extends Source {
     var defaults = {
       classes: {},
       host: 'localhost',
-      username: 'root',
-      password: '',
+      username: undefined,
+      password: undefined,
       database: undefined,
       options: {},
       dialect: undefined,
