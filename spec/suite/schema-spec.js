@@ -498,39 +498,6 @@ describe("Schema", function() {
 
     });
 
-    it("validates by default", function(done) {
-
-      co(function*() {
-        var Image = this.image;
-        var image = Image.create();
-        Image.validator().rule('name', 'not:empty');
-
-        expect(yield image.save()).toBe(false);
-        expect(image.exists()).toBe(false);
-        done();
-      }.bind(this));
-
-    });
-
-    it("validates direct relationships by default", function(done) {
-
-      co(function*() {
-        var Gallery = this.gallery;
-        Gallery.validator().rule('name', 'not:empty');
-
-        var Image = this.image;
-        var image = Image.create({
-          name: 'amiga_1200.jpg',
-          title: 'Amiga 1200',
-          gallery: {}
-        });
-        expect(yield image.save()).toBe(false);
-        expect(image.exists()).toBe(false);
-        done();
-      }.bind(this));
-
-    });
-
     it("throws an exception when trying to update an entity with no ID data", function(done) {
 
       var Gallery = this.gallery;

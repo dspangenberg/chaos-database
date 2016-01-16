@@ -1,6 +1,19 @@
+import co from 'co';
 import { extend, merge } from 'extend-merge';
 import { Schema as BaseSchema, Relationship, BelongsTo, HasOne, HasMany, HasManyThrough } from 'chaos-orm';
 import Query from './query';
+
+function arrayDiff(a, b) {
+  var len = a.length;
+  var arr = [];
+
+  for (var i = 0; i < len; i++) {
+    if (b.indexOf(a[i]) === -1) {
+      arr.push(a[i]);
+    }
+  }
+  return arr;
+}
 
 class Schema extends BaseSchema {
   /**
@@ -48,6 +61,118 @@ class Schema extends BaseSchema {
          .meta(this.meta('table'));
 
     return this.connection().query(query.toString());
+  }
+
+  /**
+   * Inserts and/or updates an entity and its direct relationship data in the datasource.
+   *
+   * @param Object   entity  The entity instance to save.
+   * @param Object   options Options:
+   *                         - `'validate'`  _Boolean_: If `false`, validation will be skipped, and the record will
+   *                                                    be immediately saved. Defaults to `true`.
+   *                         - `'whitelist'` _Object_ : An array of fields that are allowed to be saved to this record.
+   *                         - `'locked'`    _Boolean_: Lock data to the schema fields.
+   *                         - `'embed'`     _Object_ : List of relations to save.
+   * @return Promise         Returns a promise.
+   */
+  save(entity, options) {
+    return co(function*() {
+
+      var defaults = {
+        validate: true,
+        whitelist: undefined,
+        locked: this.locked(),
+        embed: true
+      };
+
+      options = extend({}, defaults, options);
+
+      options.validate = false;
+      options.embed = this.treeify(options.embed);
+
+      var success = yield this._save(entity, 'belongsTo', options);
+
+      if (!success) {
+        return false;
+      }
+
+      var hasRelations = ['hasMany', 'hasOne'];
+
+      if (!entity.modified()) {
+        return yield this._save(entity, hasRelations, options);
+      }
+
+      var fields = this.names();
+      var whitelist = options.whitelist;
+
+      if (whitelist || options.locked) {
+        whitelist = whitelist ? whitelist : fields;
+      }
+
+      var exclude = {}, values = {}, field;
+      var diff = arrayDiff(this.relations(false), fields);
+
+      for (field of diff) {
+        exclude[field] = true;
+      }
+
+      for (field of fields) {
+        if (!exclude[field] && entity.get(field) !== undefined) {
+          values[field] = entity.get(field);
+        }
+      }
+
+      if (entity.exists() === false) {
+        success = yield this.insert(values);
+      } else {
+        var id = entity.primaryKey();
+        if (id === undefined) {
+          throw new Error("Missing ID, can't update the entity.");
+        }
+        var params = {};
+        params[this.primaryKey()] = id
+        success = yield this.update(values, params);
+      }
+      if (entity.exists() === false) {
+        var id = entity.primaryKey() === undefined ? this.lastInsertId() : undefined;
+        entity.sync(id, {}, { exists: true });
+      }
+      var ok = yield this._save(entity, hasRelations, options);
+
+      return success && ok;
+
+    }.bind(this));
+  }
+
+  /**
+   * Save relations helper.
+   *
+   * @param  Object  entity  The entity instance.
+   * @param  Array   types   Type of relations to save.
+   * @param  Object  options Options array.
+   * @return Promise         Returns a promise.
+   */
+  _save(entity, types, options) {
+    var defaults = { embed: {} };
+    options = extend({}, defaults, options);
+
+    types = Array.isArray(types) ? types : [types];
+    return co(function*() {
+      var type, value, relName, rel, success = true;
+
+      for (var type of types) {
+        for (relName in options.embed) {
+          value = options.embed[relName];
+          rel = this.relation(relName)
+          if (!rel || rel.type() !== type) {
+              continue;
+          }
+          var ok = yield rel.save(entity, extend({}, options, { embed: value }));
+          success = success && ok;
+        }
+      }
+      return success;
+    }.bind(this));
   }
 
   /**
