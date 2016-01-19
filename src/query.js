@@ -86,6 +86,13 @@ class Query {
     this._has = [];
 
     /**
+     * Pagination.
+     *
+     * @var Array
+     */
+    this._page = [];
+
+    /**
      * The select statement instance.
      *
      * @var Function
@@ -154,6 +161,7 @@ class Query {
       var collector = options.collector = options.collector ? options.collector : new classname();
 
       this._applyHas();
+      this._applyLimit();
 
       var noFields = !this.statement().data('fields').length;
       if (noFields) {
@@ -324,6 +332,42 @@ class Query {
   }
 
   /**
+   * Sets page number.
+   *
+   * @param  integer page The page number
+   * @return self
+   */
+  page(page)
+  {
+    this._page.page = page;
+    return this;
+  }
+
+  /**
+   * Sets offset value.
+   *
+   * @param  integer offset The offset value.
+   * @return self
+   */
+  offset(offset)
+  {
+    this._page.offset = offset;
+    return this;
+  }
+
+  /**
+   * Sets limit value.
+   *
+   * @param  integer limit The number of results to limit or `0` for limit at all.
+   * @return self
+   */
+  limit(limit)
+  {
+    this._page.limit = Number.parseInt(limit);
+    return this;
+  }
+
+  /**
    * Applies a query handler
    *
    * @param  Closure  closure A closure.
@@ -403,6 +447,9 @@ class Query {
     return alias;
   }
 
+  /**
+   * Applies the has conditions.
+   */
   _applyHas() {
     var schema = this.model().schema();
     var tree = schema.treeify(this.has());
@@ -415,6 +462,31 @@ class Query {
     }
   }
 
+  /**
+   * Applies the limit range when applicable.
+   */
+  _applyLimit() {
+    if (!this._page.limit) {
+        return;
+    }
+    var offset;
+    if (this._page.offset) {
+      offset = this._page.offset;
+    } else {
+      var page = this._page.page ? this._page.page : 1;
+      offset = (page - 1) * this._page.limit;
+    }
+    this.statement().limit(this._page.limit, offset);
+  }
+
+  /**
+   * Applies joins.
+   *
+   * @param Object model     The model to perform joins on.
+   * @param Array  tree      The tree of relations to join.
+   * @param Array  basePath  The base relation path.
+   * @param String aliasFrom The alias name of the from model.
+   */
   _applyJoins(model, tree, basePath, aliasFrom) {
     for (var key in tree) {
       var childs = tree[key];
