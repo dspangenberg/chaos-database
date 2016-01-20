@@ -125,16 +125,16 @@ class Schema extends BaseSchema {
       if (entity.exists() === false) {
         success = yield this.insert(values);
       } else {
-        var id = entity.primaryKey();
+        var id = entity.id();
         if (id === undefined) {
           throw new Error("Missing ID, can't update the entity.");
         }
         var params = {};
-        params[this.primaryKey()] = id
+        params[this.key()] = id
         success = yield this.update(values, params);
       }
       if (entity.exists() === false) {
-        var id = entity.primaryKey() === undefined ? this.lastInsertId() : undefined;
+        var id = entity.id() === undefined ? this.lastInsertId() : undefined;
         entity.sync(id, {}, { exists: true });
       }
       var ok = yield this._save(entity, hasRelations, options);
@@ -185,11 +185,11 @@ class Schema extends BaseSchema {
    * @return Boolean            Returns `true` if the update operation succeeded, otherwise `false`.
    */
   insert(data, options) {
-    var primaryKey = this.primaryKey();
+    var key = this.key();
 
-    if (data[primaryKey] === undefined) {
+    if (data[key] === undefined) {
       var constructor = this.connection().constructor;
-      data[primaryKey] = constructor.enabled('default') ? { ':plain' : 'default' } : null;
+      data[key] = constructor.enabled('default') ? { ':plain' : 'default' } : null;
     }
 
     var insert = this.connection().dialect().statement('insert');
@@ -274,7 +274,7 @@ class Schema extends BaseSchema {
    * @return mixed Returns the last insert id.
    */
   lastInsertId() {
-    var sequence = this.source() + '_' + this.primaryKey() + '_seq';
+    var sequence = this.source() + '_' + this.key() + '_seq';
     return this.connection().lastInsertId(sequence);
   }
 }

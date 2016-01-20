@@ -267,11 +267,11 @@ describe("Schema", function() {
         var image = Image.create(data);
         expect(yield image.save()).toBe(true);
         expect(image.exists()).toBe(true);
-        expect(image.primaryKey()).not.toBe(null);
+        expect(image.id()).not.toBe(null);
 
-        var reloaded = yield Image.id(image.primaryKey());
+        var reloaded = yield Image.load(image.id());
         expect(reloaded.data()).toEqual({
-          id: image.primaryKey(),
+          id: image.id(),
           gallery_id: null,
           name: 'amiga_1200.jpg',
           title: 'Amiga 1200'
@@ -280,11 +280,11 @@ describe("Schema", function() {
         reloaded.set('title', 'Amiga 1260');
         expect(yield reloaded.save()).toBe(true);
         expect(reloaded.exists()).toBe(true);
-        expect(reloaded.primaryKey()).toBe(image.primaryKey());
+        expect(reloaded.id()).toBe(image.id());
 
-        var persisted = yield Image.id(reloaded.primaryKey());
+        var persisted = yield Image.load(reloaded.id());
         expect(persisted.data()).toEqual({
-          id: reloaded.primaryKey(),
+          id: reloaded.id(),
           gallery_id: null,
           name: 'amiga_1200.jpg',
           title: 'Amiga 1260'
@@ -310,12 +310,12 @@ describe("Schema", function() {
         var gallery = Gallery.create(data);
         expect(yield gallery.save()).toBe(true);
 
-        expect(gallery.primaryKey()).not.toBe(null);
+        expect(gallery.id()).not.toBe(null);
         for (var image of gallery.get('images')) {
-          expect(image.get('gallery_id')).toBe(gallery.primaryKey());
+          expect(image.get('gallery_id')).toBe(gallery.id());
         }
 
-        var result = yield Gallery.id(gallery.primaryKey(), { embed: ['images'] });
+        var result = yield Gallery.load(gallery.id(), { embed: ['images'] });
         expect(result.data()).toEqual(gallery.data());
       }.bind(this)).then(function() {
         done();
@@ -338,10 +338,10 @@ describe("Schema", function() {
         var image = Image.create(data);
         expect(yield image.save()).toBe(true);
 
-        expect(image.primaryKey()).not.toBe(null);
-        expect(image.get('gallery').primaryKey()).toBe(image.get('gallery_id'));
+        expect(image.id()).not.toBe(null);
+        expect(image.get('gallery').id()).toBe(image.get('gallery_id'));
 
-        var result = yield Image.id(image.primaryKey(), { embed: ['gallery'] });
+        var result = yield Image.load(image.id(), { embed: ['gallery'] });
         expect(result.data()).toEqual(image.data());
       }.bind(this)).then(function() {
         done();
@@ -364,10 +364,10 @@ describe("Schema", function() {
 
         expect(yield gallery.save()).toBe(true);
 
-        expect(gallery.primaryKey()).not.toBe(null);
-        expect(gallery.get('detail').get('gallery_id')).toBe(gallery.primaryKey());
+        expect(gallery.id()).not.toBe(null);
+        expect(gallery.get('detail').get('gallery_id')).toBe(gallery.id());
 
-        var result = yield Gallery.id(gallery.primaryKey(), { embed: ['detail'] });
+        var result = yield Gallery.load(gallery.id(), { embed: ['detail'] });
         expect(gallery.data()).toEqual(result.data());
       }.bind(this)).then(function() {
         done();
@@ -403,18 +403,18 @@ describe("Schema", function() {
       it("saves a hasManyTrough relationship", function(done) {
 
         co(function*() {
-          expect(this.entity.primaryKey()).not.toBe(null);
+          expect(this.entity.id()).not.toBe(null);
           expect(this.entity.get('images_tags').count()).toBe(3);
           expect(this.entity.get('tags').count()).toBe(3);
 
           this.entity.get('images_tags').forEach(function(image_tag, index) {
-            expect(image_tag.get('tag_id')).toBe(image_tag.get('tag').primaryKey());
-            expect(image_tag.get('image_id')).toBe(this.entity.primaryKey());
+            expect(image_tag.get('tag_id')).toBe(image_tag.get('tag').id());
+            expect(image_tag.get('image_id')).toBe(this.entity.id());
             expect(image_tag.get('tag')).toBe(this.entity.get('tags').get(index));
           }.bind(this));
 
           var Image = this.image;
-          var result = yield Image.id(this.entity.primaryKey(), { embed: ['gallery', 'tags'] });
+          var result = yield Image.load(this.entity.id(), { embed: ['gallery', 'tags'] });
           expect(this.entity.data()).toEqual(result.data());
         }.bind(this)).then(function() {
           done();
@@ -426,7 +426,7 @@ describe("Schema", function() {
 
         co(function*() {
           var Image = this.image;
-          var reloaded = yield Image.id(this.entity.primaryKey(), { embed: ['tags'] });
+          var reloaded = yield Image.load(this.entity.id(), { embed: ['tags'] });
           reloaded.get('tags').push({ name: 'tag4' });
           expect(reloaded.get('tags').count()).toBe(4);
 
@@ -435,13 +435,13 @@ describe("Schema", function() {
 
           expect(yield reloaded.save()).toBe(true);
 
-          var persisted = yield Image.id(reloaded.primaryKey(), { embed: ['tags'] });
+          var persisted = yield Image.load(reloaded.id(), { embed: ['tags'] });
 
           expect(persisted.get('tags').count()).toBe(3);
 
           persisted.get('images_tags').forEach(function(image_tag, index) {
-            expect(image_tag.get('tag_id')).toBe(image_tag.get('tag').primaryKey());
-            expect(image_tag.get('image_id')).toBe(persisted.primaryKey());
+            expect(image_tag.get('tag_id')).toBe(image_tag.get('tag').id());
+            expect(image_tag.get('image_id')).toBe(persisted.id());
             expect(image_tag.get('tag')).toBe(persisted.get('tags').get(index));
           });
         }.bind(this)).then(function() {
@@ -474,22 +474,22 @@ describe("Schema", function() {
         var gallery = Gallery.create(data);
         expect(yield gallery.save({ embed: 'images.tags' })).toBe(true);
 
-        expect(gallery.primaryKey()).not.toBe(null);
+        expect(gallery.id()).not.toBe(null);
         expect(gallery.get('images').count()).toBe(1);
 
         for (var image of gallery.get('images')) {
-          expect(image.get('gallery_id')).toBe(gallery.primaryKey());
+          expect(image.get('gallery_id')).toBe(gallery.id());
           expect(image.get('images_tags').count()).toBe(3);
           expect(image.get('tags').count()).toBe(3);
 
           image.get('images_tags').forEach(function(image_tag, index) {
-            expect(image_tag.get('tag_id')).toBe(image_tag.get('tag').primaryKey());
-            expect(image_tag.get('image_id')).toBe(image.primaryKey());
+            expect(image_tag.get('tag_id')).toBe(image_tag.get('tag').id());
+            expect(image_tag.get('image_id')).toBe(image.id());
             expect(image_tag.get('tag')).toBe(image.get('tags').get(index));
           });
         }
 
-        var result = yield Gallery.id(gallery.primaryKey(), { embed: ['images.tags'] });
+        var result = yield Gallery.load(gallery.id(), { embed: ['images.tags'] });
         expect(gallery.data()).toEqual(result.data());
 
       }.bind(this)).then(function() {
@@ -534,7 +534,7 @@ describe("Schema", function() {
 
         expect(yield image.persist({ custom: 'option' })).toBe(true);
         expect(image.exists()).toBe(true);
-        expect(image.primaryKey()).not.toBe(null);
+        expect(image.id()).not.toBe(null);
 
         expect(spy).toHaveBeenCalledWith({
           custom: 'option',

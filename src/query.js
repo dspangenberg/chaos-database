@@ -181,13 +181,13 @@ class Query {
         case 'entity':
           var schema = model.schema();
           var source = schema.source();
-          var primaryKey = schema.primaryKey();
+          var key = schema.key();
 
           collection = model.create(collection, { collector: collector, type: 'set' });
 
           for (var record of cursor) {
-            if (record[primaryKey] && collector.exists(source, record[primaryKey])) {
-              collection.push(collector.get(source, record[primaryKey]));
+            if (record[key] && collector.exists(source, record[key])) {
+              collection.push(collector.get(source, record[key]));
             } else {
               collection.push(model.create(record, {
                 collector: collector,

@@ -21,7 +21,7 @@
     "cleanup": "rm -rf ./coverage"
   },
   "dependencies": {
-    "chaos-orm": "^1.1",
+    "chaos-orm": "^2.0",
     "co": "^4.6.0",
     "date-format": "0.0.2",
     "extend-merge": "^1.0.3",
