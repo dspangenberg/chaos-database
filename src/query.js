@@ -102,7 +102,7 @@ class Query {
     var model = this.model();
 
     if (model) {
-      var schema = model.schema();
+      var schema = model.definition();
       var source = schema.source();
       var from = {};
       from[source] = this.alias('', schema);
@@ -179,7 +179,7 @@ class Query {
 
       switch (ret) {
         case 'entity':
-          var schema = model.schema();
+          var schema = model.definition();
           var source = schema.source();
           var key = schema.key();
 
@@ -207,7 +207,7 @@ class Query {
           throw new Error("Invalid `'" + options['return'] + "'` mode as `'return'` value");
           break;
       }
-      return model.schema().embed(collection, this._embed, { fetchOptions: options });
+      return model.definition().embed(collection, this._embed, { fetchOptions: options });
     }.bind(this));
   }
 
@@ -239,7 +239,7 @@ class Query {
    */
   count() {
     return co(function*() {
-      var schema = this.model().schema();
+      var schema = this.model().definition();
       this.statement().fields([{':plain': 'COUNT(*)'}]);
       var cursor = yield this.connection().query(this.statement().toString());
       var result = cursor.next();
@@ -257,7 +257,7 @@ class Query {
   fields(fields) {
     fields = Array.isArray(fields) && arguments.length === 1 ? fields : Array.prototype.slice.call(arguments);
 
-    var schema = this.model().schema();
+    var schema = this.model().definition();
 
     for (var value of fields) {
       if (typeof value === 'string' && schema.has(value)) {
@@ -451,7 +451,7 @@ class Query {
    * Applies the has conditions.
    */
   _applyHas() {
-    var schema = this.model().schema();
+    var schema = this.model().definition();
     var tree = schema.treeify(this.has());
     this._applyJoins(this.model(), tree, '', this.alias());
     var has = this.has();
@@ -490,7 +490,7 @@ class Query {
   _applyJoins(model, tree, basePath, aliasFrom) {
     for (var key in tree) {
       var childs = tree[key];
-      var rel = model.relation(key);
+      var rel = model.definition().relation(key);
       var path = basePath ? basePath + '.' + key : key;
       var to;
 
@@ -502,11 +502,11 @@ class Query {
         var pathThrough = path ? path + '.' + nameThrough : nameThrough;
         var from = rel.from();
 
-        var relThrough = from.relation(nameThrough);
+        var relThrough = from.definition().relation(nameThrough);
         var aliasThrough = this._join(pathThrough, relThrough, aliasFrom);
 
         var modelThrough = relThrough.to();
-        var relTo = modelThrough.relation(name);
+        var relTo = modelThrough.definition().relation(name);
         to = this._join(path, relTo, aliasThrough);
       }
 
@@ -530,7 +530,7 @@ class Query {
     }
 
     var model = rel.to();
-    var schema = model.schema();
+    var schema = model.definition();
     var source = schema.source();
     var toAlias = this.alias(path, schema);
 

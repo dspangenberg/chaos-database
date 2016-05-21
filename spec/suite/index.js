@@ -3,7 +3,7 @@ Promise = require('bluebird');
 import { Model } from 'chaos-orm';
 import { Schema } from '../../src';
 
-Model.schema(Schema);
+Model.definition(Schema);
 
 require('./cursor-spec');
 require('./database-spec');

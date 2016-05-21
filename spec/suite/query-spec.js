@@ -511,7 +511,7 @@ describe("Query", function() {
 
     it("gets/sets some alias values", function() {
 
-      var schema = this.image.schema();
+      var schema = this.image.definition();
 
       expect(this.query.alias('images', schema)).toBe('image');
       expect(this.query.alias('images')).toBe('image');
@@ -520,7 +520,7 @@ describe("Query", function() {
 
     it("creates unique aliases when a same table is used multiple times", function() {
 
-      var schema = this.gallery.schema();
+      var schema = this.gallery.definition();
 
       expect(this.query.alias()).toBe('gallery');
       expect(this.query.alias('parent', schema)).toBe('gallery__0');

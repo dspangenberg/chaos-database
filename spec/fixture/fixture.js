@@ -101,7 +101,7 @@ class Fixture {
       return this._cache;
     }
 
-    this._cache = this.model().schema();
+    this._cache = this.model().definition();
     this._alterFields(this._cache);
 
     return this._cache;
@@ -139,11 +139,14 @@ class Fixture {
         var value = values[key];
         switch(mode) {
           case 'add':
-            schema.field(key, value);
+            schema.set(key, value);
             break;
           case 'change':
-            if (schema.has(key) && value['to'] !== undefined) {
-              var field = schema.get(key);
+            if (!schema.has(key)) {
+              throw new Error("Can't change the following unexisting field: `'" + key + "'`.");
+            }
+            var field = schema.field(key);
+            if (value['to'] !== undefined) {
               schema.remove(key);
               var to = value.to;
               delete value.to;

@@ -54,22 +54,6 @@ describe("Schema", function() {
     });
   });
 
-
-  describe(".query()", function() {
-
-    it("throw an exception when no model is set", function() {
-
-      var closure = function() {
-        var schema = new Schema({ connection: this.connection });
-        schema.query();
-      }.bind(this);
-
-      expect(closure).toThrow(new Error("Missing model for this schema, can't create a query."));
-
-    });
-
-  });
-
   describe(".create()/.drop()", function() {
 
     it("creates/drop a table", function(done) {
@@ -142,7 +126,7 @@ describe("Schema", function() {
 
         co(function*() {
           var model = this.gallery;
-          var schema = model.schema();
+          var schema = model.definition();
           var galleries = yield model.all();
 
           yield schema.embed(galleries, ['images']);
@@ -162,7 +146,7 @@ describe("Schema", function() {
 
         co(function*() {
           var model = this.image;
-          var schema = model.schema();
+          var schema = model.definition();
           var images = yield model.all();
 
           yield schema.embed(images, ['gallery']);
@@ -180,7 +164,7 @@ describe("Schema", function() {
 
         co(function*() {
           var model = this.gallery;
-          var schema = model.schema();
+          var schema = model.definition();
           var galleries = yield model.all();
 
           yield schema.embed(galleries, ['detail', 'images']);
@@ -198,7 +182,7 @@ describe("Schema", function() {
 
         co(function*() {
           var model = this.image;
-          var schema = model.schema();
+          var schema = model.definition();
           var images = yield model.all();
 
           yield schema.embed(images, ['tags']);
@@ -218,7 +202,7 @@ describe("Schema", function() {
 
         co(function*() {
           var model = this.image;
-          var schema = model.schema();
+          var schema = model.definition();
           var images = yield model.all();
 
           yield schema.embed(images, ['tags.images']);
