@@ -132,6 +132,32 @@ class Database extends Source {
   }
 
   /**
+   * Gets the column schema for a given MySQL table.
+   *
+   * @param  mixed    name    Specifies the table name for which the schema should be returned.
+   * @param  Object   columns Any schema columns pre-defined by the model.
+   * @param  Object   meta
+   * @return Function         Returns a shema definition.
+   */
+  describe(name, columns, meta) {
+    var nbargs = arguments.length;
+    return co(function*() {
+      if (nbargs === 1) {
+        columns = yield this.fields(name);
+      }
+
+      var schema = this.classes().schema;
+
+      return new schema({
+        connection: this,
+        source: name,
+        columns: columns,
+        meta: meta
+      });
+    }.bind(this));
+  }
+
+  /**
    * Returns the list of tables in the currently-connected database.
    *
    * @return array Returns an array of sources to which models can connect.

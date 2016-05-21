@@ -139,7 +139,7 @@ class Fixture {
         var value = values[key];
         switch(mode) {
           case 'add':
-            schema.set(key, value);
+            schema.column(key, value);
             break;
           case 'change':
             if (!schema.has(key)) {
@@ -151,7 +151,7 @@ class Fixture {
               var to = value.to;
               delete value.to;
               delete value.value;
-              schema.set(to, extend({}, field, value));
+              schema.column(to, extend({}, field, value));
             }
             break;
           case 'drop':

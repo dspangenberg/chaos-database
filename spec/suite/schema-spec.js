@@ -66,7 +66,7 @@ describe("Schema", function() {
           connection: this.connection,
           source: 'test_table'
         });
-        schema.set('id', { type: 'serial' });
+        schema.column('id', { type: 'serial' });
 
         yield schema.create();
         expect(yield this.connection.sources()).toEqual({ test_table: 'test_table' });

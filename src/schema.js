@@ -53,17 +53,10 @@ class Schema extends BaseSchema {
       throw new Error("Missing table name for this schema.");
     }
 
-    var columns = [];
-    for (var name of this.fields()) {
-      var field = {};
-      field[name] = this.field(name);
-      columns.push(field);
-    }
-
     var query = this.connection().dialect().statement('create table');
     query.ifNotExists(options.soft)
          .table(this._source)
-         .columns(columns)
+         .columns(this.columns())
          .constraints(this.meta('constraints'))
          .meta(this.meta('table'));
 
