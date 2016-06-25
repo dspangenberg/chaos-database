@@ -102,6 +102,7 @@ describe("Query", function() {
           { id: 1, name: 'Foo Gallery' },
           { id: 2, name: 'Bar Gallery' }
         ]);
+        expect(result.exists()).toBe(true);
       }.bind(this)).then(function(result) {
         done();
       });

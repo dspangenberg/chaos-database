@@ -170,7 +170,7 @@ class Query {
         this.statement().fields([star]);
       }
 
-      var collection;
+      var collection = [];
       var ret = options['return'];
 
       var cursor = yield this.connection().query(this.statement().toString());
@@ -183,11 +183,16 @@ class Query {
           var source = schema.source();
           var key = schema.key();
 
-          collection = model.create(collection, { collector: collector, type: 'set' });
+          collection = model.create([], {
+            collector: collector,
+            type: 'set',
+            exists: true
+          });
 
           for (var record of cursor) {
-            if (record[key] && collector.exists(source, record[key])) {
-              collection.push(collector.get(source, record[key]));
+            var uuid = source + ':' + record[key];
+            if (record[key] && collector.exists(uuid)) {
+              collection.push(collector.get(uuid));
             } else {
               collection.push(model.create(record, {
                 collector: collector,
@@ -198,7 +203,6 @@ class Query {
           break;
         case 'array':
         case 'object':
-          collection = [];
           for (var record of cursor) {
             collection.push(extend({}, record));
           }

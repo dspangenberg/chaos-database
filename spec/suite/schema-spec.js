@@ -482,23 +482,6 @@ describe("Schema", function() {
 
     });
 
-    it("throws an exception when trying to update an entity with no ID data", function(done) {
-
-      var Gallery = this.gallery;
-      var gallery = Gallery.create({}, { exists: true });
-      gallery.set('name', 'Foo Gallery');
-      gallery.save()
-        .then(function() {
-          expect(false).toBe(true);
-          done();
-        })
-        .catch(function(err) {
-          expect(err).toEqual(new Error("Missing ID, can't update the entity."));
-          done();
-        });
-
-    });
-
   });
 
   describe(".persist()", function() {

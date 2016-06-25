@@ -63,7 +63,7 @@ class Fixture {
      */
     this._cache = undefined;
 
-    this._model.config({ connection: this.connection() });
+    this._model.connection(this.connection());
   }
 
   /**

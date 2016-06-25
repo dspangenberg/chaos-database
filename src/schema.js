@@ -103,7 +103,7 @@ class Schema extends BaseSchema {
 
       var hasRelations = ['hasMany', 'hasOne'];
 
-      if (!entity.modified()) {
+      if (entity.exists() && !entity.modified()) {
         return yield this._save(entity, hasRelations, options);
       }
 
@@ -200,7 +200,6 @@ class Schema extends BaseSchema {
     var insert = this.connection().dialect().statement('insert');
     insert.into(this.source())
           .values(data);
-
     return this.connection().query(insert.toString());
   }
 
