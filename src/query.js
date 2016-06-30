@@ -1,6 +1,6 @@
 import co from 'co';
 import { extend, merge } from 'extend-merge';
-import { Collector } from 'chaos-orm';
+import { Model, Collector } from 'chaos-orm';
 
 /**
  * The Query wrapper.
@@ -24,17 +24,24 @@ class Query {
    * Creates a new record object with default values.
    *
    * @param array config Possible options are:
-   *                      - `'type'`       _string_ : The type of query.
-   *                      - `'connection'` _object_ : The connection instance.
-   *                      - `'model'`      _string_ : The model class.
+   *                      - `'model'`  _Function_ : A model class.
+   *                      - `'schema'` _Object_   : Alternatively a schema instance can be provided instead of the model.
+   *                      - `'query'`  _Object_   : The query.
    */
   constructor(config) {
     var defaults = {
-      connection: undefined,
       model: undefined,
+      schema: undefined,
       query: {}
     };
     config = extend({}, defaults, config);
+
+    if (config.model) {
+      this._model = config.model;
+      this._schema = this._model.definition();
+    } else {
+      this._schema = config.schema;
+    }
 
     /**
      * The connection to the datasource.
@@ -42,13 +49,6 @@ class Query {
      * @var Function
      */
     this._connection = config.connection;
-
-    /**
-     * The fully namespaced model class name on which this query is starting.
-     *
-     * @var String
-     */
-    this._model = config.model;
 
     /**
      * Count the number of identical aliases in a query for building unique aliases.
@@ -92,43 +92,41 @@ class Query {
      */
     this._page = [];
 
+    var schema = this.schema();
+
     /**
      * The select statement instance.
      *
      * @var Function
      */
-    this._statement = this.connection().dialect().statement('select');
+    this._statement = schema.connection().dialect().statement('select');
 
-    var model = this.model();
+    var source = schema.source();
+    var from = {};
+    from[source] = this.alias('', schema);
+    this.statement().from(from);
 
-    if (model) {
-      var schema = model.definition();
-      var source = schema.source();
-      var from = {};
-      from[source] = this.alias('', schema);
-      this.statement().from(from);
-    }
     for (var key in config.query) {
       this[key](config.query[key]);
     }
   }
 
   /**
-   * Gets the connection object to which this query is bound.
+   * Gets the schema.
    *
-   * @return Function Returns a connection instance.
+   * @return Function Returns the schema.
    */
-  connection() {
-    if (!this._connection) {
-      throw new Error("Error, missing connection for this query.");
+  schema() {
+    if (!this._schema) {
+      throw new Error("Error, missing schema for this query.");
     }
-    return this._connection;
+    return this._schema;
   }
 
   /**
-   * Gets model.
+   * Gets the model.
    *
-   * @return Function Returns the mode.
+   * @return Function Returns the model.
    */
   model() {
     return this._model;
@@ -153,7 +151,7 @@ class Query {
     return co(function*(){
       var defaults = {
         collector: undefined,
-        'return': 'entity'
+        return: 'entity'
       };
       options = extend({}, defaults, options);
 
@@ -173,15 +171,18 @@ class Query {
       var collection = [];
       var ret = options['return'];
 
-      var cursor = yield this.connection().query(this.statement().toString());
-
-      var model = this._model;
+      var schema = this.schema();
+      var cursor = yield schema.connection().query(this.statement().toString());
 
       switch (ret) {
         case 'entity':
-          var schema = model.definition();
           var source = schema.source();
           var key = schema.key();
+
+          var model = this.model();
+          if (!model) {
+            throw new Error("Missing model for this query, set `'return'` to `'object'` to get row data.");
+          }
 
           collection = model.create([], {
             collector: collector,
@@ -211,7 +212,7 @@ class Query {
           throw new Error("Invalid `'" + options['return'] + "'` mode as `'return'` value");
           break;
       }
-      return model.definition().embed(collection, this._embed, { fetchOptions: options });
+      return schema.embed(collection, this._embed, { fetchOptions: options });
     }.bind(this));
   }
 
@@ -243,9 +244,9 @@ class Query {
    */
   count() {
     return co(function*() {
-      var schema = this.model().definition();
+      var schema = this.schema();
       this.statement().fields([{':plain': 'COUNT(*)'}]);
-      var cursor = yield this.connection().query(this.statement().toString());
+      var cursor = yield schema.connection().query(this.statement().toString());
       var result = cursor.next();
       var key = Object.keys(result)[0]
       return Number.parseInt(result[key]);
@@ -261,7 +262,7 @@ class Query {
   fields(fields) {
     fields = Array.isArray(fields) && arguments.length === 1 ? fields : Array.prototype.slice.call(arguments);
 
-    var schema = this.model().definition();
+    var schema = this.schema();
 
     for (var value of fields) {
       if (typeof value === 'string' && schema.has(value)) {
@@ -455,9 +456,9 @@ class Query {
    * Applies the has conditions.
    */
   _applyHas() {
-    var schema = this.model().definition();
+    var schema = this.schema();
     var tree = schema.treeify(this.has());
-    this._applyJoins(this.model(), tree, '', this.alias());
+    this._applyJoins(this.schema(), tree, '', this.alias());
     var has = this.has();
     for (var value of has) {
       var key = Object.keys(value)[0];
@@ -486,15 +487,15 @@ class Query {
   /**
    * Applies joins.
    *
-   * @param Object model     The model to perform joins on.
+   * @param Object schema    The schema to perform joins on.
    * @param Array  tree      The tree of relations to join.
    * @param Array  basePath  The base relation path.
    * @param String aliasFrom The alias name of the from model.
    */
-  _applyJoins(model, tree, basePath, aliasFrom) {
+  _applyJoins(schema, tree, basePath, aliasFrom) {
     for (var key in tree) {
       var childs = tree[key];
-      var rel = model.definition().relation(key);
+      var rel = schema.relation(key);
       var path = basePath ? basePath + '.' + key : key;
       var to;
 
@@ -515,7 +516,7 @@ class Query {
       }
 
       if (childs && Object.keys(childs).length) {
-        this._applyJoins(rel.to(), childs, path, to);
+        this._applyJoins(rel.to().definition(), childs, path, to);
       }
     }
   }
@@ -526,15 +527,14 @@ class Query {
    * @param  string path      The relation path.
    * @param  object rel       A Relationship instance.
    * @param  string fromAlias The "from" model alias.
-   * @return string            The "to" model alias.
+   * @return string           The "to" model alias.
    */
   _join(path, rel, fromAlias) {
     if (this._aliases[path] !== undefined) {
       return this._aliases[path];
     }
 
-    var model = rel.to();
-    var schema = model.definition();
+    var schema = rel.to().definition();
     var source = schema.source();
     var toAlias = this.alias(path, schema);
 

@@ -1,6 +1,6 @@
 import co from 'co';
 import { extend, merge } from 'extend-merge';
-import { Model } from 'chaos-orm';
+import { Schema, Model } from 'chaos-orm';
 import { Query } from '../../src';
 import Sqlite from '../adapter/sqlite';
 
@@ -40,8 +40,7 @@ describe("Query", function() {
       this.tag = this.fixtures.get('tag').model();
 
       this.query = new Query({
-        model: this.gallery,
-        connection: this.connection
+        model: this.gallery
       });
 
     }.bind(this)).then(function() {
@@ -58,22 +57,15 @@ describe("Query", function() {
     });
   });
 
-  describe(".connection()", function() {
+  describe(".construct()", function() {
 
-    it("returns the connection", function() {
-
-      expect(this.query.connection()).toBe(this.connection);
-
-    });
-
-    it("throws an error if no connection is available", function() {
+    it("throws an error if no schema is available", function() {
 
       var closure = function() {
-        this.query = new Query({ model: this.gallery });
-        this.query.connection();
+        this.query = new Query();
       }.bind(this);
 
-      expect(closure).toThrow(new Error("Error, missing connection for this query."));
+      expect(closure).toThrow(new Error("Error, missing schema for this query."));
 
     });
 
@@ -149,7 +141,7 @@ describe("Query", function() {
       co(function*() {
         yield this.fixtures.populate('gallery');
 
-        var result = yield this.query.order(['id']).get({ 'return': 'object' });
+        var result = yield this.query.order(['id']).get({ return: 'object' });
 
         expect(result).toEqual([
           { id: 1, name: 'Foo Gallery' },
@@ -168,7 +160,7 @@ describe("Query", function() {
 
         var exception;
 
-        yield this.query.get({ 'return': 'unsupported' }).catch(function(err) {
+        yield this.query.get({ return: 'unsupported' }).catch(function(err) {
           exception = err;
         });
 
@@ -176,6 +168,53 @@ describe("Query", function() {
 
       }.bind(this)).then(function(result) {
         done();
+      });
+
+    });
+
+    context("using queries with no model", function() {
+
+      beforeEach(function() {
+        this.query = new Query({
+          schema: this.gallery.definition()
+        });
+      });
+
+      it("finds all records using object hydration", function(done) {
+
+        co(function*() {
+          yield this.fixtures.populate('gallery');
+
+          var result = yield this.query.order(['id']).get({ return: 'object' });
+
+          expect(result).toEqual([
+            { id: 1, name: 'Foo Gallery' },
+            { id: 2, name: 'Bar Gallery' }
+          ]);
+        }.bind(this)).then(function(result) {
+          done();
+        });
+
+      });
+
+
+      it("throws an error if the return mode has been set to `'entity'`", function(done) {
+
+        co(function*() {
+          yield this.fixtures.populate('gallery');
+
+          var exception;
+
+          yield this.query.get().catch(function(err) {
+            exception = err;
+          });
+
+          expect(exception).toEqual(new Error("Missing model for this query, set `'return'` to `'object'` to get row data."));
+
+        }.bind(this)).then(function(result) {
+          done();
+        });
+
       });
 
     });
@@ -209,7 +248,7 @@ describe("Query", function() {
 
         var result = yield this.query.fields([
           { ':as': [ { ':plain': 'COUNT(*)' }, { ':name': 'count' } ] }
-        ]).first({ 'return': 'object' });
+        ]).first({ return: 'object' });
 
         expect(result).toEqual({ 'count': 2 });
       }.bind(this)).then(function(result) {
@@ -262,8 +301,7 @@ describe("Query", function() {
         yield this.fixtures.populate('image');
 
         var query = new Query({
-          model: this.image,
-          connection: this.connection
+          model: this.image
         });
         var result = yield query.fields(['gallery_id'])
                                 .group('gallery_id')
@@ -305,8 +343,7 @@ describe("Query", function() {
         yield this.fixtures.populate('gallery');
 
         var query = new Query({
-          model: this.gallery,
-          connection: this.connection
+          model: this.gallery
         });
         var entity = yield query.order({ name: 'ASC' }).first();
         expect(entity.get('name')).toBe('Bar Gallery');
@@ -334,7 +371,7 @@ describe("Query", function() {
 
   });
 
-  describe("->page()", function() {
+  describe(".page()", function() {
 
     it("returns records at a specific page", function(done) {
 
@@ -342,8 +379,7 @@ describe("Query", function() {
         yield this.fixtures.populate('tag');
 
         var query = new Query({
-          model: this.tag,
-          connection: this.connection
+          model: this.tag
         });
 
         var result = yield query.order(['id']).page(1).limit(3).all();
@@ -367,7 +403,7 @@ describe("Query", function() {
 
   });
 
-  describe("->offset()", function() {
+  describe(".offset()", function() {
 
     it("returns records at a specific offset", function(done) {
 
@@ -375,8 +411,7 @@ describe("Query", function() {
         yield this.fixtures.populate('tag');
 
         var query = new Query({
-          model: this.tag,
-          connection: this.connection
+          model: this.tag
         });
 
         var result = yield query.order(['id']).page(1).limit(3).all();
@@ -404,7 +439,11 @@ describe("Query", function() {
 
     it("gets/sets with relationship", function() {
 
-      var query = new Query({ connection: this.connection });
+      var query = new Query({
+        schema: new Schema({
+          connection: this.connection
+        })
+      });
       query.embed('relation1.relation2');
       query.embed('relation3', {
         conditions: [{ title: 'hello world' }]
