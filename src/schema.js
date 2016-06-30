@@ -199,7 +199,8 @@ class Schema extends BaseSchema {
 
     var insert = this.connection().dialect().statement('insert');
     insert.into(this.source())
-          .values(data);
+          .values(data, this.type.bind(this));
+
     return this.connection().query(insert.toString());
   }
 
@@ -218,7 +219,7 @@ class Schema extends BaseSchema {
     var update = this.connection().dialect().statement('update');
     update.table(this.source())
           .where(conditions)
-          .values(data);
+          .values(data, this.type.bind(this));
 
     return this.connection().query(update.toString());
   }

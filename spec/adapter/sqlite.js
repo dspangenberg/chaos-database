@@ -73,24 +73,25 @@ class Sqlite extends Database {
      */
     this._connected = false;
 
-    /**
-     * The SQL dialect instance.
-     *
-     * @var Function
-     */
+    this.formatter('datasource', 'boolean', function(value, options) {
+      return value ? 1 : 0;
+    });
+
+    if (typeof this._dialect === 'object') {
+      return;
+    }
+
     var dialect = this.classes().dialect;
 
-    if (typeof this._dialect !== 'object') {
-      this._dialect = new dialect({
-        caster: function(value, states) {
-          var type = states && states.type ? states.type : this.constructor.getType(value);
-          if (typeof type === 'function') {
-            type = type(states.name);
-          }
-          return this.format('datasource', type, value);
-        }.bind(this)
-      });
-    }
+    this._dialect = new dialect({
+      caster: function(value, states) {
+        var type = states && states.type ? states.type : this.constructor.getType(value);
+        if (typeof type === 'function') {
+          type = type(states.name);
+        }
+        return this.format('datasource', type, value);
+      }.bind(this)
+    });
   }
 
   /**

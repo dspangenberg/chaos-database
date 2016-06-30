@@ -239,6 +239,61 @@ describe("Schema", function() {
 
     });
 
+    it("casts data on insert using datasource handlers", function(done) {
+
+      co(function*() {
+        var schema = new Schema({ source: 'test' });
+        schema.connection(this.connection);
+
+        schema.column('id',         { type: 'serial' });
+        schema.column('name',       { type: 'string' });
+        schema.column('null',       { type: 'string' });
+        schema.column('value',      { type: 'integer' });
+        schema.column('double',     { type: 'float' });
+        schema.column('revenue',    {
+          type: 'decimal',
+          length: 20,
+          precision: 2
+        });
+        schema.column('active',     { type: 'boolean' });
+        schema.column('registered', { type: 'date' });
+        schema.column('created',    { type: 'datetime' });
+
+        yield schema.create();
+
+        yield schema.insert({
+          id: 1,
+          name: 'test',
+          null: null,
+          value: 1234,
+          double: 1.5864,
+          revenue: '152000.85',
+          active: true,
+          registered: new Date(Date.UTC(2016, 6, 30, 0, 0, 0)),
+          created: new Date(Date.UTC(2016, 6, 30, 4, 38, 55))
+        });
+
+        var cursor = yield schema.connection().query('SELECT * FROM test WHERE id = 1');
+        var data = cursor.next();
+
+        expect(data).toEqual({
+          id: 1,
+          name: 'test',
+          null: null,
+          value: 1234,
+          double: 1.5864,
+          revenue: 152000.85,
+          active: 1,
+          registered: '2016-07-30',
+          created: '2016-07-30 06:38:55'
+        });
+
+        yield schema.drop();
+      }.bind(this)).then(function() {
+        done();
+      });
+    });
+
     it("saves and updates an entity", function(done) {
 
       co(function*() {

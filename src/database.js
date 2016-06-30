@@ -194,7 +194,9 @@ class Database extends Source {
           return Number.parseFloat(value);
         },
         'decimal': function(value, options) {
-          return Number.parseFloat(value);
+          var defaults = { precision: 2 };
+          options = extend({}, defaults, options);
+          return Number(value).toFixed(options.precision);
         },
         'date':function(value, options) {
           return new Date(value);
