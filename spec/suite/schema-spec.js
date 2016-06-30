@@ -414,7 +414,7 @@ describe("Schema", function() {
           reloaded.get('tags').push({ name: 'tag4' });
           expect(reloaded.get('tags').count()).toBe(4);
 
-          reloaded.get('tags').unset(0);
+          reloaded.get('tags').remove(0);
           expect(reloaded.get('tags').count()).toBe(3);
 
           expect(yield reloaded.save()).toBe(true);
@@ -516,7 +516,7 @@ describe("Schema", function() {
 
   });
 
-  describe(".delete()", function() {
+  describe(".truncate()", function() {
 
     it("deletes an entity", function(done) {
 

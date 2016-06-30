@@ -236,7 +236,7 @@ class Schema extends BaseSchema {
    *                             options.
    * @return Boolean             Returns `true` if the remove operation succeeded, otherwise `false`.
    */
-  delete(conditions, options) {
+  truncate(conditions, options) {
     var del = this.connection().dialect().statement('delete');
 
     del.from(this.source())
