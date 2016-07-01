@@ -11,6 +11,8 @@ Chaos ORM base classes for SQL based adapter.
 npm install chaos-database
 ```
 
+__Note: Require `babel-polyfill` as a peer dependency__
+
 ## Documentation
 
 See the whole [documentation here](http://chaos-orm.readthedocs.org/en/latest).
