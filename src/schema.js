@@ -282,6 +282,32 @@ class Schema extends BaseSchema {
     var sequence = this.source() + '_' + this.key() + '_seq';
     return this.connection().lastInsertId(sequence);
   }
+
+  /**
+   * Formats a value according to its type.
+   *
+   * @param   String mode    The format mode (i.e. `'cast'` or `'datasource'`).
+   * @param   String type    The format type.
+   * @param   mixed  value   The value to format.
+   * @param   mixed  options The options array to pass the the formatter handler.
+   * @return  mixed          The formated value.
+   */
+  _format(mode, type, value, options) {
+    var formatter;
+    if (value !== null && typeof value === 'object' && value.constructor === Object) {
+      var key = Object.keys(value)[0];
+      var connection = this.connection();
+      if (connection && connection.dialect().isOperator(key)) {
+        return connection.dialect().format(key, value[key]);
+      }
+    }
+    if (this._formatters[mode] && this._formatters[mode][type]) {
+      formatter = this._formatters[mode][type];
+    } else if (this._formatters[mode] && this._formatters[mode]._default_) {
+      formatter = this._formatters[mode]._default_;
+    }
+    return formatter ? formatter(value, options) : value;
+  }
 }
 
 /**

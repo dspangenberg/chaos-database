@@ -6,14 +6,11 @@ describe("Database", function() {
 
   beforeEach(function() {
 
-    this.dialect = function() {}
-    this.dialect.quote = function(string) {
-      return "'" + string + "'";
-    };
-
+    this.dialect = new Dialect();
     this.database = new Database({
       dialect: this.dialect
     });
+
   });
 
   describe(".constructor()", function() {
@@ -101,6 +98,7 @@ describe("Database", function() {
       expect(this.database.format('datasource', 'string', 'abc')).toBe("'abc'");
       expect(this.database.format('datasource', '_default_', 123)).toBe("'123'");
       expect(this.database.format('datasource', '_undefined_', 123)).toBe("'123'");
+      expect(this.database.format('datasource', 'serial', { ':plain': 'default' })).toBe('default');
 
     });
 

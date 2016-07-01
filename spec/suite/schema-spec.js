@@ -598,4 +598,21 @@ describe("Schema", function() {
 
   });
 
+  describe(".format()", function() {
+
+    it("formats according default `'database'` handlers", function() {
+
+      var schema = new Schema({
+        connection: this.connection,
+        source: 'test_table'
+      });
+      schema.column('id', { type: 'serial' });
+
+      expect(schema.format('datasource', 'id', 123)).toBe('123');
+      expect(schema.format('datasource', 'id', { ':plain': 'default' })).toBe('default');
+
+    });
+
+  });
+
 });
