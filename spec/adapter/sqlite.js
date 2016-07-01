@@ -73,6 +73,10 @@ class Sqlite extends Database {
      */
     this._connected = false;
 
+    this.formatter('cast', 'boolean', function(value, options) {
+      return value === 1 ? true : false;
+    });
+
     this.formatter('datasource', 'boolean', function(value, options) {
       return value ? 1 : 0;
     });

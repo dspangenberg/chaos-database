@@ -1,5 +1,5 @@
 import co from 'co';
-import dateformat from 'date-format';
+import dateFormat from 'dateformat-light';
 import { extend, merge } from 'extend-merge';
 import { Dialect } from 'sql-dialect';
 import { Source } from 'chaos-orm';
@@ -205,7 +205,7 @@ class Database extends Source {
           return new Date(value);
         },
         'boolean': function(value, options) {
-          return !!value;
+          return value === 'TRUE';
         },
         'null': function(value, options) {
           return null;
@@ -219,15 +219,17 @@ class Database extends Source {
           return this.dialect().quote(String(value));
         }.bind(this),
         'date': function(value, options) {
-          return this.format('datasource', 'datetime', value, { format: 'yyyy-MM-dd' });
+          options = options || {};
+          options.format = options.format ? options.format : 'yyyy-mm-dd';
+          return this.format('datasource', 'datetime', value, options);
         }.bind(this),
         'datetime': function(value, options) {
           options = options || {};
-          options.format = options.format ? options.format : 'yyyy-MM-dd hh:mm:ss';
+          options.format = options.format ? options.format : 'yyyy-mm-dd HH:MM:ss';
           if (!value instanceof Date) {
             value = new Date(value);
           }
-          return this.dialect().quote(dateformat.asString(options.format, value));
+          return this.dialect().quote(dateFormat(value, options.format, true));
         }.bind(this),
         'boolean': function(value, options) {
           return value ? 'TRUE' : 'FALSE';

@@ -285,7 +285,7 @@ describe("Schema", function() {
           revenue: 152000.85,
           active: 1,
           registered: '2016-07-30',
-          created: '2016-07-30 06:38:55'
+          created: '2016-07-30 04:38:55'
         });
 
         yield schema.drop();

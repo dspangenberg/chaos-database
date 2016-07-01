@@ -192,7 +192,7 @@ class Query {
 
           for (var record of cursor) {
             var uuid = source + ':' + record[key];
-            if (record[key] && collector.exists(uuid)) {
+            if (record[key] && collector.has(uuid)) {
               collection.push(collector.get(uuid));
             } else {
               collection.push(model.create(record, {
