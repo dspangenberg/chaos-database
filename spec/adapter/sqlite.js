@@ -73,12 +73,8 @@ class Sqlite extends Database {
      */
     this._connected = false;
 
-    this.formatter('cast', 'boolean', function(value, options) {
-      return value === 1 ? true : false;
-    });
-
     this.formatter('datasource', 'boolean', function(value, options) {
-      return value ? 1 : 0;
+      return value ? '1' : '0';
     });
 
     if (typeof this._dialect === 'object') {
@@ -174,6 +170,7 @@ class Sqlite extends Database {
         accept(data ? new cursor({ data: data }) : true);
       };
 
+      // Thanks node-sqlite3 for such crappy API SQL !
       self.connect().then(function(client) {
         if (sql.match(/^(SELECT|PRAGMA)/i)) {
           client.all(sql, response);
@@ -228,7 +225,7 @@ class Sqlite extends Database {
             }
             break;
           case 'boolean':
-            dflt = dflt === 'TRUE';
+            dflt = dflt === '1';
             break;
           case 'datetime':
             dflt = dflt !== 'CURRENT_TIMESTAMP' ? dflt : null;
