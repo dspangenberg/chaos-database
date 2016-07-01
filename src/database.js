@@ -205,7 +205,7 @@ class Database extends Source {
           return new Date(value);
         },
         'boolean': function(value, options) {
-          return value === 'TRUE';
+          return !!value;
         },
         'null': function(value, options) {
           return null;

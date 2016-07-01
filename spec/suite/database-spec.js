@@ -124,9 +124,9 @@ describe("Database", function() {
       expect(this.database.format('cast', 'datetime', '2014-11-21 10:20:45')).toEqual(local);
 
       expect(this.database.format('cast', 'datetime', 1416565245 * 1000)).toEqual(new Date('2014-11-21T10:20:45.000Z'));
-      expect(this.database.format('cast', 'boolean', 'TRUE')).toBe(true);
-      expect(this.database.format('cast', 'boolean', 'FALSE')).toBe(false);
-      expect(this.database.format('cast', 'null', 'NULL')).toBe(null);
+      expect(this.database.format('cast', 'boolean', 1)).toBe(true);
+      expect(this.database.format('cast', 'boolean', 0)).toBe(false);
+      expect(this.database.format('cast', 'null', '')).toBe(null);
       expect(this.database.format('cast', 'string', 'abc')).toBe('abc');
       expect(this.database.format('cast', '_default_', 123)).toBe(123);
       expect(this.database.format('cast', '_undefined_', 123)).toBe(123);
