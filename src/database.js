@@ -220,7 +220,7 @@ class Database extends Source {
         'date': function(value, options) {
           options = options || {};
           options.format = options.format ? options.format : 'yyyy-mm-dd';
-          return this.format('datasource', 'datetime', value, options);
+          return this.convert('datasource', 'datetime', value, options);
         }.bind(this),
         'datetime': function(value, options) {
           options = options || {};
@@ -248,7 +248,7 @@ class Database extends Source {
    * @param  mixed  value The value to format.
    * @return mixed        The formated value.
    */
-  format(mode, type, value, options) {
+  convert(mode, type, value, options) {
     var type = (mode === 'datasource' && value === null) ? 'null' : type;
     if (value !== null && typeof value === 'object' && value.constructor === Object) {
       var key = Object.keys(value)[0];
@@ -256,7 +256,7 @@ class Database extends Source {
         return this.dialect().format(key, value[key]);
       }
     }
-    return super.format(mode, type, value, options);
+    return super.convert(mode, type, value, options);
   }
 
   /**

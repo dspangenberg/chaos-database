@@ -292,7 +292,7 @@ class Schema extends BaseSchema {
    * @param   mixed  options The options array to pass the the formatter handler.
    * @return  mixed          The formated value.
    */
-  _format(mode, type, value, options) {
+  convert(mode, type, value, options) {
     var formatter;
     if (value !== null && typeof value === 'object' && value.constructor === Object) {
       var key = Object.keys(value)[0];

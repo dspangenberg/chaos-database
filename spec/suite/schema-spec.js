@@ -537,6 +537,17 @@ describe("Schema", function() {
 
     });
 
+    it("throws an exception when trying to update an entity with no ID data", function() {
+
+      var closure = function() {
+        var Gallery = this.gallery;
+        var gallery = Gallery.create({}, { exists: true });
+      }.bind(this);
+
+      expect(closure).toThrow(new Error("Existing entities must have a valid ID."));
+
+    });
+
   });
 
   describe(".persist()", function() {
