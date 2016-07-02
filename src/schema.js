@@ -296,7 +296,7 @@ class Schema extends BaseSchema {
     var formatter;
     if (value !== null && typeof value === 'object' && value.constructor === Object) {
       var key = Object.keys(value)[0];
-      var connection = this.connection();
+      var connection = this._connection;
       if (connection && connection.dialect().isOperator(key)) {
         return connection.dialect().format(key, value[key]);
       }

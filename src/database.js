@@ -252,8 +252,9 @@ class Database extends Source {
     var type = (mode === 'datasource' && value === null) ? 'null' : type;
     if (value !== null && typeof value === 'object' && value.constructor === Object) {
       var key = Object.keys(value)[0];
-      if (this.dialect().isOperator(key)) {
-        return this.dialect().format(key, value[key]);
+      var dialect = this.dialect();
+      if (dialect && dialect.isOperator(key)) {
+        return dialect.format(key, value[key]);
       }
     }
     return super.convert(mode, type, value, options);
