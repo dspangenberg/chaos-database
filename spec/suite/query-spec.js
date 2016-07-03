@@ -401,6 +401,26 @@ describe("Query", function() {
 
     });
 
+    it("populates the meta count value", function(done) {
+
+      co(function*() {
+        yield this.fixtures.populate('tag');
+
+        var query = new Query({
+          model: this.tag
+        });
+
+        var result = yield query.order(['id']).page(1).limit(3).all();
+        expect(result.meta()).toEqual(
+          { count: 6 }
+        );
+
+      }.bind(this)).then(function(result) {
+        done();
+      });
+
+    });
+
   });
 
   describe(".offset()", function() {
@@ -414,19 +434,39 @@ describe("Query", function() {
           model: this.tag
         });
 
-        var result = yield query.order(['id']).page(1).limit(3).all();
+        var result = yield query.order(['id']).offset(0).limit(3).all();
         expect(result.data()).toEqual([
           {id: 1, name: 'High Tech'},
           {id: 2, name: 'Sport'},
           {id: 3, name: 'Computer'}
         ]);
 
-        result = yield query.order(['id']).page(2).limit(3).all();
+        result = yield query.order(['id']).offset(3).limit(3).all();
         expect(result.data()).toEqual([
           {id: 4, name: 'Art'},
           {id: 5, name: 'Science'},
           {id: 6, name: 'City'}
         ]);
+      }.bind(this)).then(function(result) {
+        done();
+      });
+
+    });
+
+    it("populates the meta count value", function(done) {
+
+      co(function*() {
+        yield this.fixtures.populate('tag');
+
+        var query = new Query({
+          model: this.tag
+        });
+
+        var result = yield query.order(['id']).offset(3).limit(3).all();
+        expect(result.meta()).toEqual(
+          { count: 6 }
+        );
+
       }.bind(this)).then(function(result) {
         done();
       });

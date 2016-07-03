@@ -183,6 +183,11 @@ class Query {
             exists: true
           });
 
+          if (this.statement().data('limit')) {
+            var count = this.count();
+            collection.meta({ count: yield count });
+          }
+
           for (var record of cursor) {
             var uuid = source + ':' + record[key];
             if (record[key] && collector.has(uuid)) {
@@ -237,9 +242,15 @@ class Query {
    */
   count() {
     return co(function*() {
-      var schema = this.schema();
-      this.statement().fields([{':plain': 'COUNT(*)'}]);
-      var cursor = yield schema.connection().query(this.statement().toString());
+      var statement = this.statement();
+      var counter = this.schema().connection().dialect().statement('select');
+      counter.fields({':plain': 'COUNT(*)'});
+      counter.data('from', statement.data('from'));
+      counter.data('joins', statement.data('joins'));
+      counter.data('where', statement.data('where'));
+      counter.data('group', statement.data('group'));
+      counter.data('having', statement.data('having'));
+      var cursor = yield this.schema().connection().query(counter.toString());
       var result = cursor.next();
       var key = Object.keys(result)[0]
       return Number.parseInt(result[key]);
