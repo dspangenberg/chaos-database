@@ -44,13 +44,6 @@ class Query {
     }
 
     /**
-     * The connection to the datasource.
-     *
-     * @var Function
-     */
-    this._connection = config.connection;
-
-    /**
      * Count the number of identical aliases in a query for building unique aliases.
      *
      * @var Object
