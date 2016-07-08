@@ -161,7 +161,7 @@ class Query {
         this.statement().fields([star]);
       }
 
-      var collection = [];
+      var collection;
       var ret = options['return'];
 
       var schema = this.schema();
@@ -202,6 +202,7 @@ class Query {
           break;
         case 'array':
         case 'object':
+          collection = [];
           for (var record of cursor) {
             collection.push(extend({}, record));
           }
