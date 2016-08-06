@@ -239,6 +239,33 @@ describe("Schema", function() {
 
     });
 
+    it("uses whitelist with locked schema", function(done) {
+
+      co(function*() {
+        var Image = this.image;
+        var image = Image.create();
+
+        image.set({
+          name: 'image',
+          title: 'Image',
+          gallery_id: 3
+        });
+
+        expect(yield image.save({whitelist: ['title']})).toBe(true);
+        expect(image.exists()).toBe(true);
+
+        var reloaded = yield Image.load(image.id());
+        expect(reloaded.data()).toEqual({
+          id: image.id(),
+          name: null,
+          title: 'Image',
+          gallery_id: null
+        });
+        done();
+      }.bind(this));
+
+    });
+
     it("casts data on insert using datasource handlers", function(done) {
 
       co(function*() {

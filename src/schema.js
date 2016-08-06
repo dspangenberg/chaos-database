@@ -79,7 +79,6 @@ class Schema extends BaseSchema {
     return co(function*() {
 
       var defaults = {
-        validate: true,
         whitelist: undefined,
         locked: this.locked(),
         embed: entity.schema().relations()
@@ -107,11 +106,16 @@ class Schema extends BaseSchema {
         return yield this._save(entity, hasRelations, options);
       }
 
-      var fields = this.names();
-      var whitelist = options.whitelist;
+      var fields;
 
-      if (whitelist || options.locked) {
-        whitelist = whitelist ? whitelist : fields;
+      if (!options.whitelist) {
+        fields = options.locked ? this.fields() : Object.keys(entity.get());
+      } else if (options.locked) {
+        fields = this.fields().filter(function(n) {
+          return options.whitelist.indexOf(n) !== -1;
+        });
+      } else {
+        fields = options.whitelist;
       }
 
       var exclude = {}, values = {}, field;
