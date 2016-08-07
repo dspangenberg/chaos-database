@@ -225,14 +225,14 @@ describe("Schema", function() {
 
   });
 
-  describe(".save()", function() {
+  describe(".broadcast()", function() {
 
     it("saves empty entities", function(done) {
 
       co(function*() {
         var Image = this.image;
         var image = Image.create();
-        expect(yield image.save()).toBe(true);
+        expect(yield image.broadcast()).toBe(true);
         expect(image.exists()).toBe(true);
         done();
       }.bind(this));
@@ -251,7 +251,7 @@ describe("Schema", function() {
           gallery_id: 3
         });
 
-        expect(yield image.save({whitelist: ['title']})).toBe(true);
+        expect(yield image.broadcast({whitelist: ['title']})).toBe(true);
         expect(image.exists()).toBe(true);
 
         var reloaded = yield Image.load(image.id());
@@ -332,7 +332,7 @@ describe("Schema", function() {
 
         var Image = this.image;
         var image = Image.create(data);
-        expect(yield image.save()).toBe(true);
+        expect(yield image.broadcast()).toBe(true);
         expect(image.exists()).toBe(true);
         expect(image.id()).not.toBe(null);
 
@@ -345,7 +345,7 @@ describe("Schema", function() {
         });
 
         reloaded.set('title', 'Amiga 1260');
-        expect(yield reloaded.save()).toBe(true);
+        expect(yield reloaded.broadcast()).toBe(true);
         expect(reloaded.exists()).toBe(true);
         expect(reloaded.id()).toBe(image.id());
 
@@ -375,7 +375,7 @@ describe("Schema", function() {
 
         var Gallery = this.gallery;
         var gallery = Gallery.create(data);
-        expect(yield gallery.save()).toBe(true);
+        expect(yield gallery.broadcast()).toBe(true);
 
         expect(gallery.id()).not.toBe(null);
         for (var image of gallery.get('images')) {
@@ -403,7 +403,7 @@ describe("Schema", function() {
 
         var Image = this.image;
         var image = Image.create(data);
-        expect(yield image.save()).toBe(true);
+        expect(yield image.broadcast()).toBe(true);
 
         expect(image.id()).not.toBe(null);
         expect(image.get('gallery').id()).toBe(image.get('gallery_id'));
@@ -429,7 +429,7 @@ describe("Schema", function() {
         var Gallery = this.gallery;
         var gallery = Gallery.create(data);
 
-        expect(yield gallery.save()).toBe(true);
+        expect(yield gallery.broadcast()).toBe(true);
 
         expect(gallery.id()).not.toBe(null);
         expect(gallery.get('detail').get('gallery_id')).toBe(gallery.id());
@@ -460,7 +460,7 @@ describe("Schema", function() {
 
           var Image = this.image;
           this.entity = Image.create(data);
-          yield this.entity.save();
+          yield this.entity.broadcast();
         }.bind(this)).then(function() {
           done();
         });
@@ -500,7 +500,7 @@ describe("Schema", function() {
           reloaded.get('tags').remove(0);
           expect(reloaded.get('tags').count()).toBe(3);
 
-          expect(yield reloaded.save()).toBe(true);
+          expect(yield reloaded.broadcast()).toBe(true);
 
           var persisted = yield Image.load(reloaded.id(), { embed: ['tags'] });
 
@@ -539,7 +539,7 @@ describe("Schema", function() {
 
         var Gallery = this.gallery;
         var gallery = Gallery.create(data);
-        expect(yield gallery.save({ embed: 'images.tags' })).toBe(true);
+        expect(yield gallery.broadcast({ embed: 'images.tags' })).toBe(true);
 
         expect(gallery.id()).not.toBe(null);
         expect(gallery.get('images').count()).toBe(1);
@@ -578,7 +578,7 @@ describe("Schema", function() {
 
   });
 
-  describe(".persist()", function() {
+  describe(".save()", function() {
 
     it("saves an entity", function(done) {
 
@@ -591,9 +591,9 @@ describe("Schema", function() {
         var Image = this.image;
         var image = Image.create(data);
 
-        var spy = spyOn(image, 'save').and.callThrough();
+        var spy = spyOn(image, 'broadcast').and.callThrough();
 
-        expect(yield image.persist({ custom: 'option' })).toBe(true);
+        expect(yield image.save({ custom: 'option' })).toBe(true);
         expect(image.exists()).toBe(true);
         expect(image.id()).not.toBe(null);
 
@@ -623,7 +623,7 @@ describe("Schema", function() {
         var Image = this.image;
         var image = Image.create(data);
 
-        expect(yield image.save()).toBe(true);
+        expect(yield image.broadcast()).toBe(true);
         expect(image.exists()).toBe(true);
 
         yield image.delete();

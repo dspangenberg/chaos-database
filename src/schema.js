@@ -3,18 +3,6 @@ import { extend, merge } from 'extend-merge';
 import { Schema as BaseSchema, Relationship, BelongsTo, HasOne, HasMany, HasManyThrough } from 'chaos-orm';
 import Query from './query';
 
-function arrayDiff(a, b) {
-  var len = a.length;
-  var arr = [];
-
-  for (var i = 0; i < len; i++) {
-    if (b.indexOf(a[i]) === -1) {
-      arr.push(a[i]);
-    }
-  }
-  return arr;
-}
-
 class Schema extends BaseSchema {
   /**
    * Returns a query to retrieve data from the connected data source.
@@ -64,123 +52,46 @@ class Schema extends BaseSchema {
   }
 
   /**
-   * Inserts and/or updates an entity and its direct relationship data in the datasource.
+   * Bulk inserts
    *
-   * @param Object   entity  The entity instance to save.
-   * @param Object   options Options:
-   *                         - `'validate'`  _Boolean_: If `false`, validation will be skipped, and the record will
-   *                                                    be immediately saved. Defaults to `true`.
-   *                         - `'whitelist'` _Object_ : An array of fields that are allowed to be saved to this record.
-   *                         - `'locked'`    _Boolean_: Lock data to the schema fields.
-   *                         - `'embed'`     _Object_ : List of relations to save.
-   * @return Promise         Returns a promise.
+   * @param  Array    inserts An array of entities to insert.
+   * @param  Function filter  The filter handler for which extract entities values for the insertion.
+   * @return Boolean          Returns `true` if insert operations succeeded, `false` otherwise.
    */
-  save(entity, options) {
+  bulkInsert(inserts, filter) {
     return co(function*() {
-
-      var defaults = {
-        whitelist: undefined,
-        locked: this.locked(),
-        embed: entity.schema().relations()
-      };
-
-      options = extend({}, defaults, options);
-
-      options.validate = false;
-
-      if (options.embed === true) {
-        options.embed = entity.hierarchy();
+      if (!inserts || !inserts.length) {
+        return true;
       }
-
-      options.embed = this.treeify(options.embed);
-
-      var success = yield this._save(entity, 'belongsTo', options);
-
-      if (!success) {
-        return false;
-      }
-
-      var hasRelations = ['hasMany', 'hasOne'];
-
-      if (entity.exists() && !entity.modified()) {
-        return yield this._save(entity, hasRelations, options);
-      }
-
-      var fields;
-
-      if (!options.whitelist) {
-        fields = options.locked ? this.fields() : Object.keys(entity.get());
-      } else if (options.locked) {
-        fields = this.fields().filter(function(n) {
-          return options.whitelist.indexOf(n) !== -1;
-        });
-      } else {
-        fields = options.whitelist;
-      }
-
-      var exclude = {}, values = {}, field;
-      var diff = arrayDiff(this.relations(false), fields);
-
-      for (field of diff) {
-        exclude[field] = true;
-      }
-
-      for (field of fields) {
-        if (!exclude[field] && entity.get(field) !== undefined) {
-          values[field] = entity.get(field);
-        }
-      }
-
-      if (entity.exists() === false) {
-        success = yield this.insert(values);
-      } else {
-        var id = entity.id();
-        if (id === undefined) {
-          throw new Error("Missing ID, can't update the entity.");
-        }
-        var params = {};
-        params[this.key()] = id
-        success = yield this.update(values, params);
-      }
-      if (entity.exists() === false) {
+      for (var entity of inserts) {
+        var success = yield this.insert(filter(entity));
         var id = entity.id() === undefined ? this.lastInsertId() : undefined;
         entity.sync(id, {}, { exists: true });
       }
-      var ok = yield this._save(entity, hasRelations, options);
-
-      return success && ok;
-
+      return true;
     }.bind(this));
   }
 
   /**
-   * Save relations helper.
+   * Bulk updates
    *
-   * @param  Object  entity  The entity instance.
-   * @param  Array   types   Type of relations to save.
-   * @param  Object  options Options array.
-   * @return Promise         Returns a promise.
+   * @param  Array    updates An array of entities to update.
+   * @param  Function filter  The filter handler for which extract entities values to update.
+   * @return Boolean          Returns `true` if update operations succeeded, `false` otherwise.
    */
-  _save(entity, types, options) {
-    var defaults = { embed: {} };
-    options = extend({}, defaults, options);
-
-    types = Array.isArray(types) ? types : [types];
+  bulkUpdate(updates, filter) {
     return co(function*() {
-      var type, value, relName, rel, success = true;
-
-      for (var type of types) {
-        for (relName in options.embed) {
-          value = options.embed[relName];
-          rel = this.relation(relName)
-          if (!rel || rel.type() !== type) {
-              continue;
-          }
-          var ok = yield rel.save(entity, extend({}, options, { embed: value }));
-          success = success && ok;
-        }
+      if (!updates || !updates.length) {
+          return true;
       }
-      return success;
+      for (var entity of updates) {
+        var id = entity.id();
+        if (id === undefined) {
+          throw new Error("Can't update an existing entity with a missing ID.");
+        }
+        yield this.update(filter(entity), {[this.key()] : id});
+      }
+      return true;
     }.bind(this));
   }
 
