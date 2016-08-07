@@ -294,7 +294,7 @@ describe("Schema", function() {
           null: null,
           value: 1234,
           double: 1.5864,
-          revenue: '152000.85',
+          revenue: '152000.8589',
           active: true,
           registered: new Date(Date.UTC(2016, 6, 30, 0, 0, 0)),
           created: new Date(Date.UTC(2016, 6, 30, 4, 38, 55))
@@ -309,12 +309,13 @@ describe("Schema", function() {
           null: null,
           value: 1234,
           double: 1.5864,
-          revenue: 152000.85,
+          revenue: 152000.86,
           active: 1,
           registered: '2016-07-30',
           created: '2016-07-30 04:38:55'
         });
 
+        cursor.close();
         yield schema.drop();
       }.bind(this)).then(function() {
         done();
