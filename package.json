@@ -39,7 +39,7 @@
     "coveralls": "^2.11.9",
     "isparta": "^4.0.0",
     "jasmine-kahlan": "^1.0.2",
-    "mocha": "^2.5.3",
+    "mocha": "^3.0.1",
     "sqlite3": "^3.1.4"
   },
   "babel": {
