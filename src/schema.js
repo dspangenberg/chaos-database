@@ -29,26 +29,32 @@ class Schema extends BaseSchema {
    * Creates the schema.
    *
    * @param  Object  options An object of options.
-   * @return Boolean
+   * @return Promise
    */
   create(options) {
-    var defaults = {
-      soft: true
-    };
-    options = extend({}, defaults, options);
+    return co(function*() {
+      var defaults = {
+        soft: true
+      };
+      options = extend({}, defaults, options);
 
-    if (this._source === undefined) {
-      throw new Error("Missing table name for this schema.");
-    }
+      if (this._source === undefined) {
+        throw new Error("Missing table name for this schema.");
+      }
 
-    var query = this.connection().dialect().statement('create table');
-    query.ifNotExists(options.soft)
-         .table(this._source)
-         .columns(this.columns())
-         .constraints(this.meta('constraints'))
-         .meta(this.meta('table'));
+      var query = this.connection().dialect().statement('create table');
+      query.ifNotExists(options.soft)
+           .table(this._source)
+           .columns(this.columns())
+           .constraints(this.meta('constraints'))
+           .meta(this.meta('table'));
 
-    return this.connection().query(query.toString());
+      try {
+        yield this.connection().query(query.toString());
+      } catch (e) {
+        throw e;
+      }
+    }.bind(this));
   }
 
   /**
@@ -56,19 +62,22 @@ class Schema extends BaseSchema {
    *
    * @param  Array    inserts An array of entities to insert.
    * @param  Function filter  The filter handler for which extract entities values for the insertion.
-   * @return Boolean          Returns `true` if insert operations succeeded, `false` otherwise.
+   * @return Promise
    */
   bulkInsert(inserts, filter) {
     return co(function*() {
       if (!inserts || !inserts.length) {
-        return true;
+        return;
       }
       for (var entity of inserts) {
-        var success = yield this.insert(filter(entity));
+        try {
+          yield this.insert(filter(entity));
+        } catch (e) {
+          throw e;
+        }
         var id = entity.id() === undefined ? this.lastInsertId() : undefined;
         entity.sync(id, {}, { exists: true });
       }
-      return true;
     }.bind(this));
   }
 
@@ -77,21 +86,24 @@ class Schema extends BaseSchema {
    *
    * @param  Array    updates An array of entities to update.
    * @param  Function filter  The filter handler for which extract entities values to update.
-   * @return Boolean          Returns `true` if update operations succeeded, `false` otherwise.
+   * @return Promise
    */
   bulkUpdate(updates, filter) {
     return co(function*() {
       if (!updates || !updates.length) {
-          return true;
+          return;
       }
       for (var entity of updates) {
         var id = entity.id();
         if (id === undefined) {
           throw new Error("Can't update an existing entity with a missing ID.");
         }
-        yield this.update(filter(entity), {[this.key()] : id});
+        try {
+          yield this.update(filter(entity), {[this.key()] : id});
+        } catch (e) {
+          throw e;
+        }
       }
-      return true;
     }.bind(this));
   }
 
@@ -102,7 +114,7 @@ class Schema extends BaseSchema {
    *                            the records will be updated. For SQL databases, this can optionally be
    *                            an SQL fragment representing the `SET` clause of an `UPDATE` query.
    * @param  Object  options    Any database-specific options to use when performing the operation.
-   * @return Boolean            Returns `true` if the update operation succeeded, otherwise `false`.
+   * @return Promise
    */
   insert(data, options) {
     var key = this.key();
@@ -128,7 +140,7 @@ class Schema extends BaseSchema {
    * @param  mixed   conditions The conditions with key/value pairs representing the scope of the records or
    *                            documents to be updated.
    * @param  Object  options    Any database-specific options to use when performing the operation.
-   * @return Boolean            Returns `true` if the update operation succeeded, otherwise `false`.
+   * @return Promise
    */
   update(data, conditions, options) {
     var update = this.connection().dialect().statement('update');
@@ -147,45 +159,50 @@ class Schema extends BaseSchema {
    *
    * @param  mixed    conditions The conditions with key/value pairs representing the scope of the records or
    *                             documents to be deleted.
-   * @param  Object   options    Any database-specific options to use when performing the operation. See
-   *                             the `delete()` method of the corresponding backend database for available
-   *                             options.
-   * @return Boolean             Returns `true` if the remove operation succeeded, otherwise `false`.
+   * @return Promise
    */
-  truncate(conditions, options) {
-    var del = this.connection().dialect().statement('delete');
+  truncate(conditions) {
+    return co(function*() {
+      var del = this.connection().dialect().statement('delete');
 
-    del.from(this.source())
+      del.from(this.source())
          .where(conditions);
 
-    return this.connection().query(del.toString());
+      return this.connection().query(del.toString());
+    }.bind(this));
   }
 
   /**
    * Drops the schema
    *
-   * @param  array   options An array of options.
-   * @return boolean
-   * @throws DatabaseException If no connection is defined or the schema name is missing.
+   * @param  Object  options An array of options.
+   * @return Boolean         Returns `true` if insert operations succeeded, `false` otherwise.
    */
   drop(options) {
-    var defaults = {
-      soft: true,
-      cascade: false,
-      restrict: false
-    };
-    options = extend({}, defaults, options);
+    return co(function*() {
+      var defaults = {
+        soft: true,
+        cascade: false,
+        restrict: false
+      };
+      options = extend({}, defaults, options);
 
-    if (this._source === undefined) {
-      throw new Error("Missing table name for this schema.");
-    }
-    var query = this.connection().dialect().statement('drop table');
-    query.ifExists(options.soft)
-        .table(this._source)
-        .cascade(options.cascade)
-        .restrict(options.restrict);
+      if (this._source === undefined) {
+        throw new Error("Missing table name for this schema.");
+      }
 
-    return this.connection().query(query.toString());
+      var query = this.connection().dialect().statement('drop table');
+      query.ifExists(options.soft)
+          .table(this._source)
+          .cascade(options.cascade)
+          .restrict(options.restrict);
+
+      try {
+        yield this.connection().query(query.toString());
+      } catch(e) {
+        throw e;
+      }
+    }.bind(this));
   }
 
   /**

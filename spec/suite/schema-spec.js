@@ -80,25 +80,27 @@ describe("Schema", function() {
 
     });
 
-    it("throw an exception when source is not set", function() {
+    it("throw an exception when source is not set", function(done) {
 
-      var closure = function() {
+      co(function*() {
         var schema = new Schema({ connection: this.connection });
-        schema.create();
-      }.bind(this);
-
-      expect(closure).toThrow(new Error("Missing table name for this schema."));
+        yield schema.create();
+      }.bind(this)).catch(function(e) {
+        expect(e).toEqual(new Error("Missing table name for this schema."));
+        done();
+      });
 
     });
 
-    it("throw an exception when source is not set", function() {
+    it("throw an exception when source is not set", function(done) {
 
-      var closure = function() {
+      co(function*() {
         var schema = new Schema({ connection: this.connection });
-        schema.drop();
-      }.bind(this);
-
-      expect(closure).toThrow(new Error("Missing table name for this schema."));
+        yield schema.drop();
+      }.bind(this)).catch(function(e) {
+        expect(e).toEqual(new Error("Missing table name for this schema."));
+        done();
+      });
 
     });
 
@@ -232,7 +234,7 @@ describe("Schema", function() {
       co(function*() {
         var Image = this.image;
         var image = Image.create();
-        expect(yield image.broadcast()).toBe(true);
+        yield image.broadcast();
         expect(image.exists()).toBe(true);
         done();
       }.bind(this));
@@ -251,7 +253,7 @@ describe("Schema", function() {
           gallery_id: 3
         });
 
-        expect(yield image.broadcast({whitelist: ['title']})).toBe(true);
+        yield image.broadcast({whitelist: ['title']});
         expect(image.exists()).toBe(true);
 
         var reloaded = yield Image.load(image.id());
@@ -332,7 +334,7 @@ describe("Schema", function() {
 
         var Image = this.image;
         var image = Image.create(data);
-        expect(yield image.broadcast()).toBe(true);
+        yield image.broadcast()
         expect(image.exists()).toBe(true);
         expect(image.id()).not.toBe(null);
 
@@ -345,7 +347,7 @@ describe("Schema", function() {
         });
 
         reloaded.set('title', 'Amiga 1260');
-        expect(yield reloaded.broadcast()).toBe(true);
+        yield reloaded.broadcast();
         expect(reloaded.exists()).toBe(true);
         expect(reloaded.id()).toBe(image.id());
 
@@ -375,7 +377,7 @@ describe("Schema", function() {
 
         var Gallery = this.gallery;
         var gallery = Gallery.create(data);
-        expect(yield gallery.broadcast()).toBe(true);
+        yield gallery.broadcast();
 
         expect(gallery.id()).not.toBe(null);
         for (var image of gallery.get('images')) {
@@ -403,7 +405,7 @@ describe("Schema", function() {
 
         var Image = this.image;
         var image = Image.create(data);
-        expect(yield image.broadcast()).toBe(true);
+        yield image.broadcast()
 
         expect(image.id()).not.toBe(null);
         expect(image.get('gallery').id()).toBe(image.get('gallery_id'));
@@ -429,7 +431,7 @@ describe("Schema", function() {
         var Gallery = this.gallery;
         var gallery = Gallery.create(data);
 
-        expect(yield gallery.broadcast()).toBe(true);
+        yield gallery.broadcast()
 
         expect(gallery.id()).not.toBe(null);
         expect(gallery.get('detail').get('gallery_id')).toBe(gallery.id());
@@ -500,7 +502,7 @@ describe("Schema", function() {
           reloaded.get('tags').remove(0);
           expect(reloaded.get('tags').count()).toBe(3);
 
-          expect(yield reloaded.broadcast()).toBe(true);
+          yield reloaded.broadcast();
 
           var persisted = yield Image.load(reloaded.id(), { embed: ['tags'] });
 
@@ -539,7 +541,7 @@ describe("Schema", function() {
 
         var Gallery = this.gallery;
         var gallery = Gallery.create(data);
-        expect(yield gallery.broadcast({ embed: 'images.tags' })).toBe(true);
+        yield gallery.broadcast({ embed: 'images.tags' });
 
         expect(gallery.id()).not.toBe(null);
         expect(gallery.get('images').count()).toBe(1);
@@ -593,7 +595,7 @@ describe("Schema", function() {
 
         var spy = spyOn(image, 'broadcast').and.callThrough();
 
-        expect(yield image.save({ custom: 'option' })).toBe(true);
+        yield image.save({ custom: 'option' });
         expect(image.exists()).toBe(true);
         expect(image.id()).not.toBe(null);
 
@@ -623,7 +625,7 @@ describe("Schema", function() {
         var Image = this.image;
         var image = Image.create(data);
 
-        expect(yield image.broadcast()).toBe(true);
+        yield image.broadcast()
         expect(image.exists()).toBe(true);
 
         yield image.delete();
