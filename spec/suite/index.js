@@ -6,7 +6,7 @@ import { Schema } from '../../src';
 
 Model.definition(Schema);
 
-require('./cursor-spec');
-require('./database-spec');
-require('./query-spec');
-require('./schema-spec');
+require('./cursor.spec');
+require('./database.spec');
+require('./query.spec');
+require('./schema.spec');
