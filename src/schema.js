@@ -49,11 +49,8 @@ class Schema extends BaseSchema {
            .constraints(this.meta('constraints'))
            .meta(this.meta('table'));
 
-      try {
-        yield this.connection().query(query.toString());
-      } catch (e) {
-        throw e;
-      }
+      yield this.connection().query(query.toString());
+
     }.bind(this));
   }
 
@@ -70,11 +67,7 @@ class Schema extends BaseSchema {
         return;
       }
       for (var entity of inserts) {
-        try {
-          yield this.insert(filter(entity));
-        } catch (e) {
-          throw e;
-        }
+        yield this.insert(filter(entity));
         var id = entity.id() === undefined ? this.lastInsertId() : undefined;
         entity.sync(id, {}, { exists: true });
       }
@@ -98,11 +91,7 @@ class Schema extends BaseSchema {
         if (id === undefined) {
           throw new Error("Can't update an existing entity with a missing ID.");
         }
-        try {
-          yield this.update(filter(entity), {[this.key()] : id});
-        } catch (e) {
-          throw e;
-        }
+        yield this.update(filter(entity), {[this.key()] : id});
       }
     }.bind(this));
   }
@@ -197,11 +186,8 @@ class Schema extends BaseSchema {
           .cascade(options.cascade)
           .restrict(options.restrict);
 
-      try {
-        yield this.connection().query(query.toString());
-      } catch(e) {
-        throw e;
-      }
+      yield this.connection().query(query.toString());
+
     }.bind(this));
   }
 
