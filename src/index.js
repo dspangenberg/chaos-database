@@ -1,6 +1,11 @@
-import Cursor from './cursor';
-import Schema from './schema';
-import Query from './query';
-import Database from './database';
+var Cursor = require('./cursor');
+var Schema = require('./schema');
+var Query = require('./query');
+var Database = require('./database');
 
-export { Cursor, Schema, Query, Database };
+module.exports = {
+  Cursor: Cursor,
+  Schema: Schema,
+  Query: Query,
+  Database: Database
+};

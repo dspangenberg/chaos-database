@@ -1,6 +1,7 @@
-import { Database, Schema } from '../../src';
-import { Dialect } from 'sql-dialect';
-import { Source } from 'chaos-orm';
+var Database = require('../../src/database');
+var Schema = require('../../src/schema');
+var Dialect = require('sql-dialect').Dialect;
+var Source = require('chaos-orm').Source;
 
 describe("Database", function() {
 

@@ -1,4 +1,4 @@
-import { Cursor } from '../../src';
+var Cursor = require('../../src/cursor');
 
 describe("Cursor", function() {
 

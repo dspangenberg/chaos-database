@@ -1,7 +1,13 @@
-import co from 'co';
-import { extend, merge } from 'extend-merge';
-import { Schema as BaseSchema, Relationship, BelongsTo, HasOne, HasMany, HasManyThrough } from 'chaos-orm';
-import Query from './query';
+var co = require('co');
+var extend = require('extend-merge').extend;
+var merge = require('extend-merge').merge;
+var BaseSchema = require('chaos-orm').Schema;
+var Relationship = require('chaos-orm').Relationship;
+var BelongsTo = require('chaos-orm').BelongsTo;
+var HasOne = require('chaos-orm').HasOne;
+var HasMany = require('chaos-orm').HasMany;
+var HasManyThrough = require('chaos-orm').HasManyThrough;
+var Query = require('./query');
 
 class Schema extends BaseSchema {
   /**
@@ -242,4 +248,4 @@ Schema._classes = {
   query: Query
 };
 
-export default Schema;
+module.exports = Schema;

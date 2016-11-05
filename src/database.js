@@ -1,10 +1,11 @@
-import co from 'co';
-import dateFormat from 'dateformat-light';
-import { extend, merge } from 'extend-merge';
-import { Dialect } from 'sql-dialect';
-import { Source } from 'chaos-orm';
-import Cursor from './cursor';
-import Schema from './schema';
+var co = require('co');
+var dateFormat = require('dateformat-light');
+var extend = require('extend-merge').extend;
+var merge = require('extend-merge').merge;
+var Dialect = require('sql-dialect').Dialect;
+var Source = require('chaos-orm').Source;
+var Cursor = require('./cursor');
+var Schema = require('./schema');
 
 /**
  * An adapter base class for SQL based driver
@@ -286,4 +287,4 @@ Database._classes = {
   dialect: Dialect
 };
 
-export default Database;
+module.exports = Database;

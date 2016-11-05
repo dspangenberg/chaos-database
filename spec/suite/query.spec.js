@@ -1,15 +1,17 @@
-import co from 'co';
-import { extend, merge } from 'extend-merge';
-import { Schema, Model } from 'chaos-orm';
-import { Query } from '../../src';
-import Sqlite from '../adapter/sqlite';
+var co = require('co');
+var extend = require('extend-merge').extend;
+var merge = require('extend-merge').merge;
+var Model = require('chaos-orm').Model;
+var Schema = require('chaos-orm').Schema;
+var Query = require('../../src/query');
+var Sqlite = require('../adapter/sqlite');
 
-import Fixtures from '../fixture/fixtures';
-import GalleryFixture from '../fixture/schema/gallery-fixture';
-import GalleryDetailFixture from '../fixture/schema/gallery-detail-fixture';
-import ImageFixture from '../fixture/schema/image-fixture';
-import ImageTagFixture from '../fixture/schema/image-tag-fixture';
-import TagFixture from '../fixture/schema/tag-fixture';
+var Fixtures = require('../fixture/fixtures');
+var GalleryFixture = require('../fixture/schema/gallery-fixture');
+var GalleryDetailFixture = require('../fixture/schema/gallery-detail-fixture');
+var ImageFixture = require('../fixture/schema/image-fixture');
+var ImageTagFixture = require('../fixture/schema/image-tag-fixture');
+var TagFixture = require('../fixture/schema/tag-fixture');
 
 describe("Query", function() {
 
