@@ -340,6 +340,7 @@ describe("Schema", function() {
         yield image.broadcast()
         expect(image.exists()).toBe(true);
         expect(image.id()).not.toBe(null);
+        expect(image.modified()).toBe(false);
 
         var reloaded = yield Image.load(image.id());
         expect(reloaded.data()).toEqual({
@@ -353,6 +354,7 @@ describe("Schema", function() {
         yield reloaded.broadcast();
         expect(reloaded.exists()).toBe(true);
         expect(reloaded.id()).toBe(image.id());
+        expect(reloaded.modified()).toBe(false);
 
         var persisted = yield Image.load(reloaded.id());
         expect(persisted.data()).toEqual({

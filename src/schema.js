@@ -98,6 +98,7 @@ class Schema extends BaseSchema {
           throw new Error("Can't update an existing entity with a missing ID.");
         }
         yield this.update(filter(entity), {[this.key()] : id});
+        entity.sync();
       }
     }.bind(this));
   }
