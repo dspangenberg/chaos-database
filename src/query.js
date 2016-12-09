@@ -26,21 +26,21 @@ class Query {
    * Creates a new record object with default values.
    *
    * @param array config Possible options are:
-   *                      - `'model'`  _Function_ : A model class.
-   *                      - `'schema'` _Object_   : Alternatively a schema instance can be provided instead of the model.
-   *                      - `'query'`  _Object_   : The query.
+   *                      - `'reference'` _Function_ : A reference class.
+   *                      - `'schema'`    _Object_   : Alternatively a schema instance can be provided instead of the model.
+   *                      - `'query'`     _Object_   : The query.
    */
   constructor(config) {
     var defaults = {
-      model: undefined,
+      reference: undefined,
       schema: undefined,
       query: {}
     };
     config = extend({}, defaults, config);
 
-    if (config.model) {
-      this._model = config.model;
-      this._schema = this._model.definition();
+    if (config.reference) {
+      this._reference = config.reference;
+      this._schema = this._reference.definition();
     } else {
       this._schema = config.schema;
     }
@@ -119,12 +119,12 @@ class Query {
   }
 
   /**
-   * Gets the model.
+   * Gets the reference.
    *
-   * @return Function Returns the model.
+   * @return Function Returns the reference.
    */
-  model() {
-    return this._model;
+  reference() {
+    return this._reference;
   }
 
   /**
@@ -174,12 +174,12 @@ class Query {
           var source = schema.source();
           var key = schema.key();
 
-          var model = this.model();
-          if (!model) {
-            throw new Error("Missing model for this query, set `'return'` to `'object'` to get row data.");
+          var reference = this.reference();
+          if (!reference) {
+            throw new Error("Missing reference for this query, set `'return'` to `'object'` to get row data.");
           }
 
-          collection = model.create([], {
+          collection = reference.create([], {
             collector: collector,
             type: 'set',
             exists: true
@@ -195,7 +195,7 @@ class Query {
             if (record[key] && collector.has(uuid)) {
               collection.push(collector.get(uuid));
             } else {
-              collection.push(model.create(record, {
+              collection.push(reference.create(record, {
                 collector: collector,
                 exists: noFields ? true : null
               }));

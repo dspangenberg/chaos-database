@@ -8,14 +8,14 @@ class Fixture {
    *
    * @param Object config Possible options are:
    *                      - `'connection'`  _Function_ : The connection instance.
-   *                      - `'model'`       _Function_ : The model.
+   *                      - `'reference'`   _Function_ : The reference.
    *                      - `'meta'`        _Object_ : Some meta data.
    *                      - `'alters'`      _Object_ : The alters.
    */
   constructor(config) {
     var defaults = {
       connection: undefined,
-      model: this._model,
+      reference: this._reference,
       meta: {},
       alters: {}
     };
@@ -44,11 +44,11 @@ class Fixture {
     this._alters = config.alters;
 
     /**
-     * The model.
+     * The reference.
      *
      * @var string
      */
-    this._model = config.model;
+    this._reference = config.reference;
 
     /**
      * The schema definition.
@@ -64,7 +64,7 @@ class Fixture {
      */
     this._cache = undefined;
 
-    this._model.connection(this.connection());
+    this._reference.connection(this.connection());
   }
 
   /**
@@ -84,12 +84,12 @@ class Fixture {
   }
 
   /**
-   * Returns a dynamically created model based on the model class name passed as parameter.
+   * Returns a dynamically created model based on the reference class name passed as parameter.
    *
-   * @return Function A model class name.
+   * @return Function A reference class name.
    */
-  model() {
-    return this._model;
+  reference() {
+    return this._reference;
   }
 
   /**
@@ -102,7 +102,7 @@ class Fixture {
       return this._cache;
     }
 
-    this._cache = this.model().definition();
+    this._cache = this.reference().definition();
     this._alterFields(this._cache);
 
     return this._cache;
@@ -121,7 +121,7 @@ class Fixture {
 
       for (var record of records) {
         var data = this._alterRecord(record);
-        var entity = this.model().create(data);
+        var entity = this.reference().create(data);
         yield entity.save();
       }
     }.bind(this));

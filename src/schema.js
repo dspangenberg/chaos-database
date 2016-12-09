@@ -10,6 +10,51 @@ var HasManyThrough = require('chaos-orm').HasManyThrough;
 var Query = require('./query');
 
 class Schema extends BaseSchema {
+
+  /**
+   * Configures the meta for use.
+   *
+   * @param Object config Possible options are:
+   *                      - `'connection'`  _Function_ : The connection instance (defaults to `undefined`).
+   */
+  constructor(config) {
+    var defaults = {
+      connection: undefined,
+    };
+
+    config = merge({}, defaults, config);
+    super(config);
+
+    /**
+     * The connection instance.
+     *
+     * @var Object
+     */
+    this._connection = undefined;
+
+    if (config.connection) {
+      this.connection(config.connection);
+    }
+  }
+
+  /**
+   * Gets/sets the connection object to which this class is bound.
+   *
+   * @param  Object connection The connection instance to set or `null` to get the current one.
+   * @return mixed             Returns the connection instance on get or `this` on set.
+   */
+  connection(connection) {
+    if (arguments.length) {
+      this._connection = connection;
+      this._formatters = merge({}, this._connection.formatters(), this._formatters);
+      return this;
+    }
+    if (!this._connection) {
+      throw new Error("Error, missing connection for this schema.");
+    }
+    return this._connection;
+  }
+
   /**
    * Returns a query to retrieve data from the connected data source.
    *
@@ -19,14 +64,14 @@ class Schema extends BaseSchema {
   query(options) {
     var defaults = {
       connection: this.connection(),
-      model: this.model()
+      reference: this.reference()
     };
     options = extend({}, defaults, options);
 
     var query = this.constructor.classes().query;
 
-    if (!options.model) {
-      throw new Error("Missing model for this schema, can't create a query.");
+    if (!options.reference) {
+      throw new Error("Missing reference for this schema, can't create a query.");
     }
     return new query(options);
   }

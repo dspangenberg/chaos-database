@@ -37,11 +37,11 @@ describe("Schema", function() {
       yield this.fixtures.populate('image_tag', ['create']);
       yield this.fixtures.populate('tag', ['create']);
 
-      this.gallery = this.fixtures.get('gallery').model();
-      this.galleryDetail = this.fixtures.get('gallery_detail').model();
-      this.image = this.fixtures.get('image').model();
-      this.image_tag = this.fixtures.get('image_tag').model();
-      this.tag = this.fixtures.get('tag').model();
+      this.gallery = this.fixtures.get('gallery').reference();
+      this.galleryDetail = this.fixtures.get('gallery_detail').reference();
+      this.image = this.fixtures.get('image').reference();
+      this.image_tag = this.fixtures.get('image_tag').reference();
+      this.tag = this.fixtures.get('tag').reference();
 
     }.bind(this)).then(function() {
       done();
@@ -55,6 +55,36 @@ describe("Schema", function() {
     }.bind(this)).then(function() {
       done();
     });
+  });
+
+  describe(".constructor()", function() {
+
+    it("correctly sets config options", function() {
+
+      var connection = { formatters: function() { return []; }};
+
+      var schema = new Schema({
+        connection: connection,
+      });
+
+      expect(schema.connection()).toBe(connection);
+
+    });
+
+  });
+
+  describe(".connection()", function() {
+
+    it("gets/sets the connection", function() {
+
+      var connection = { formatters: function() { return []; }};
+      var schema = new Schema();
+
+      expect(schema.connection(connection)).toBe(schema);
+      expect(schema.connection()).toBe(connection);
+
+    });
+
   });
 
   describe(".create()/.drop()", function() {

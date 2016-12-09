@@ -13,7 +13,7 @@
     "sql"
   ],
   "dependencies": {
-    "chaos-orm": "^9.0",
+    "chaos-orm": "^10.0",
     "co": "^4.6.0",
     "dateformat-light": "^1.0.14",
     "extend-merge": "^1.0.3",

@@ -2,7 +2,7 @@ var co = require('co');
 var extend = require('extend-merge').extend;
 var merge = require('extend-merge').merge;
 var Model = require('chaos-orm').Model;
-var Schema = require('chaos-orm').Schema;
+var Schema = require('../../src/schema');
 var Query = require('../../src/query');
 var Sqlite = require('../adapter/sqlite');
 
@@ -35,14 +35,14 @@ describe("Query", function() {
       yield this.fixtures.populate('image_tag', ['create']);
       yield this.fixtures.populate('tag', ['create']);
 
-      this.gallery = this.fixtures.get('gallery').model();
-      this.galleryDetail = this.fixtures.get('gallery_detail').model();
-      this.image = this.fixtures.get('image').model();
-      this.image_tag = this.fixtures.get('image_tag').model();
-      this.tag = this.fixtures.get('tag').model();
+      this.gallery = this.fixtures.get('gallery').reference();
+      this.galleryDetail = this.fixtures.get('gallery_detail').reference();
+      this.image = this.fixtures.get('image').reference();
+      this.image_tag = this.fixtures.get('image_tag').reference();
+      this.tag = this.fixtures.get('tag').reference();
 
       this.query = new Query({
-        model: this.gallery
+        reference: this.gallery
       });
 
     }.bind(this)).then(function() {
@@ -211,7 +211,7 @@ describe("Query", function() {
             exception = err;
           });
 
-          expect(exception).toEqual(new Error("Missing model for this query, set `'return'` to `'object'` to get row data."));
+          expect(exception).toEqual(new Error("Missing reference for this query, set `'return'` to `'object'` to get row data."));
 
         }.bind(this)).then(function(result) {
           done();
@@ -303,7 +303,7 @@ describe("Query", function() {
         yield this.fixtures.populate('image');
 
         var query = new Query({
-          model: this.image
+          reference: this.image
         });
         var result = yield query.fields(['gallery_id'])
                                 .group('gallery_id')
@@ -345,7 +345,7 @@ describe("Query", function() {
         yield this.fixtures.populate('gallery');
 
         var query = new Query({
-          model: this.gallery
+          reference: this.gallery
         });
         var entity = yield query.order({ name: 'ASC' }).first();
         expect(entity.get('name')).toBe('Bar Gallery');
@@ -381,7 +381,7 @@ describe("Query", function() {
         yield this.fixtures.populate('tag');
 
         var query = new Query({
-          model: this.tag
+          reference: this.tag
         });
 
         var result = yield query.order(['id']).page(1).limit(3).all();
@@ -409,7 +409,7 @@ describe("Query", function() {
         yield this.fixtures.populate('tag');
 
         var query = new Query({
-          model: this.tag
+          reference: this.tag
         });
 
         var result = yield query.order(['id']).page(1).limit(3).all();
@@ -433,7 +433,7 @@ describe("Query", function() {
         yield this.fixtures.populate('tag');
 
         var query = new Query({
-          model: this.tag
+          reference: this.tag
         });
 
         var result = yield query.order(['id']).offset(0).limit(3).all();
@@ -461,7 +461,7 @@ describe("Query", function() {
         yield this.fixtures.populate('tag');
 
         var query = new Query({
-          model: this.tag
+          reference: this.tag
         });
 
         var result = yield query.order(['id']).offset(3).limit(3).all();
