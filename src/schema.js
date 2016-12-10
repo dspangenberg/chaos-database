@@ -64,14 +64,14 @@ class Schema extends BaseSchema {
   query(options) {
     var defaults = {
       connection: this.connection(),
-      reference: this.reference()
+      model: this.reference()
     };
     options = extend({}, defaults, options);
 
     var query = this.constructor.classes().query;
 
-    if (!options.reference) {
-      throw new Error("Missing reference for this schema, can't create a query.");
+    if (!options.model) {
+      throw new Error("Missing model for this schema, can't create a query.");
     }
     return new query(options);
   }
