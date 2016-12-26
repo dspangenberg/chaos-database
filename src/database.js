@@ -182,35 +182,7 @@ class Database extends Source {
    * @return Object
    */
   _handlers() {
-    return {
-      cast: {
-        'string': function(value, options) {
-          return String(value);
-        },
-        'integer': function(value, options) {
-          return Number.parseInt(value);
-        },
-        'float': function(value, options) {
-          return Number.parseFloat(value);
-        },
-        'decimal': function(value, options) {
-          var defaults = { precision: 2 };
-          options = extend({}, defaults, options);
-          return Number(value).toFixed(options.precision);
-        },
-        'date':function(value, options) {
-          return new Date(value);
-        },
-        'datetime': function(value, options) {
-          return new Date(value);
-        },
-        'boolean': function(value, options) {
-          return !!value;
-        },
-        'null': function(value, options) {
-          return null;
-        }
-      },
+    return extend({}, super._handlers(), {
       datasource: {
         'string': function(value, options) {
           return String(value);
@@ -231,10 +203,14 @@ class Database extends Source {
         'datetime': function(value, options) {
           options = options || {};
           options.format = options.format ? options.format : 'yyyy-mm-dd HH:MM:ss';
-          if (!value instanceof Date) {
-            value = new Date(value);
+          if (Number(Number.parseInt(value)) === value) {
+            value = Number.parseInt(value) * 1000;
           }
-          return this.dialect().quote(dateFormat(value, options.format, true));
+          var date = !(value instanceof Date) ? new Date(value) : value;
+          if (Number.isNaN(date.getTime())) {
+            throw new Error("Invalid date `" + value + "`, can't be parsed.");
+          }
+          return this.dialect().quote(dateFormat(date, options.format, true));
         }.bind(this),
         'boolean': function(value, options) {
           return value ? 'TRUE' : 'FALSE';
@@ -243,7 +219,7 @@ class Database extends Source {
           return 'NULL';
         }
       }
-    };
+    });
   }
 
   /**
@@ -255,7 +231,6 @@ class Database extends Source {
    * @return mixed        The formated value.
    */
   convert(mode, type, value, options) {
-    var type = (mode === 'datasource' && value === null) ? 'null' : type;
     if (value !== null && typeof value === 'object' && value.constructor === Object) {
       var key = Object.keys(value)[0];
       var dialect = this.dialect();
