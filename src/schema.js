@@ -93,7 +93,7 @@ class Schema extends BaseSchema {
         throw new Error("Missing table name for this schema.");
       }
 
-      var query = this.connection().dialect().statement('create table');
+      var query = this.connection().dialect().statement('create table', { schema: this });
       query.ifNotExists(options.soft)
            .table(this._source)
            .columns(this.columns())

@@ -167,7 +167,7 @@ class Query {
       var ret = options['return'];
 
       var schema = this.schema();
-      var cursor = yield schema.connection().query(this.statement().toString());
+      var cursor = yield schema.connection().query(this.statement().toString(this._schemas));
 
       switch (ret) {
         case 'entity':
@@ -594,7 +594,7 @@ class Query {
     if (noFields) {
       statement.fields({ [this.alias()]: ['*'] });
     }
-    var sql = statement.toString();
+    var sql = statement.toString(this._schemas);
 
     for (var name in parts) {
       statement.data(name, parts[name]);

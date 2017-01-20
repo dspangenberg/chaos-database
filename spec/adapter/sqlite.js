@@ -90,9 +90,8 @@ class Sqlite extends Database {
         var type;
         if (states && states.schema) {
           type = states.schema.type(states.name);
-        } else {
-          type = this.constructor.getType(value);
         }
+        type = type ? type : this.constructor.getType(value);
         return this.convert('datasource', type, value);
       }.bind(this)
     });
