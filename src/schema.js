@@ -165,9 +165,8 @@ class Schema extends BaseSchema {
       data[key] = constructor.enabled('default') ? { ':plain' : 'default' } : null;
     }
 
-    var insert = this.connection().dialect().statement('insert');
-    insert.into(this.source())
-          .values(data, this.type.bind(this));
+    var insert = this.connection().dialect().statement('insert', { schema: this });
+    insert.into(this.source()).values(data);
 
     return this.connection().query(insert.toString());
   }
@@ -184,10 +183,10 @@ class Schema extends BaseSchema {
    * @return Promise
    */
   update(data, conditions, options) {
-    var update = this.connection().dialect().statement('update');
+    var update = this.connection().dialect().statement('update', { schema: this });
     update.table(this.source())
           .where(conditions)
-          .values(data, this.type.bind(this));
+          .values(data);
 
     return this.connection().query(update.toString());
   }
