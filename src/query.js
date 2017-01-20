@@ -573,6 +573,37 @@ class Query {
     var toField = keys[fromField];
     return { '=': [{ ':name': fromAlias + '.' + fromField },  { ':name': toAlias + '.' + toField }] };
   }
+
+  /**
+   * Return the SQL string.
+   *
+   * @return String
+   */
+  toString() {
+    var statement = this._statement;
+    var parts = {
+      fields: statement.data('fields').slice(),
+      joins: statement.data('joins').slice(),
+      where: statement.data('where').slice(),
+      limit: statement.data('limit')
+    };
+    this._applyHas();
+    this._applyLimit();
+
+    var noFields = !statement.data('fields');
+    if (noFields) {
+      statement.fields({ [this.alias()]: ['*'] });
+    }
+    var sql = statement.toString();
+
+    for (var name in parts) {
+      statement.data(name, parts[name]);
+    }
+    this._aliasCounter = {};
+    this._aliases = {};
+    this.alias('', this.schema());
+    return sql;
+  }
 }
 
 /**

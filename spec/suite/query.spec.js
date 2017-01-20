@@ -623,4 +623,21 @@ describe("Query", function() {
 
   });
 
+  describe(".toString()", function() {
+
+    it("returns the SQL version of the query", function() {
+
+      this.query.has('images.tags', { name: 'Science' });
+
+      var expected = 'SELECT * FROM "gallery"';
+      expected += ' LEFT JOIN "image" ON "gallery"."id" = "image"."gallery_id"';
+      expected += ' LEFT JOIN "image_tag" ON "image"."id" = "image_tag"."image_id"';
+      expected += ' LEFT JOIN "tag" ON "image_tag"."tag_id" = "tag"."id" WHERE "tag"."name" = \'Science\''
+      expect(this.query.toString()).toBe(expected);
+      expect(this.query.toString()).toBe(expected);
+
+    });
+
+  });
+
 });
