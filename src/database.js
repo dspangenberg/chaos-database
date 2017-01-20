@@ -1,5 +1,5 @@
 var co = require('co');
-var dateFormat = require('dateformat-light');
+var dateFormat = require('dateformat');
 var extend = require('extend-merge').extend;
 var merge = require('extend-merge').merge;
 var Dialect = require('sql-dialect').Dialect;

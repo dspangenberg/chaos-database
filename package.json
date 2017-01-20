@@ -15,7 +15,7 @@
   "dependencies": {
     "chaos-orm": "^10.0",
     "co": "^4.6.0",
-    "dateformat-light": "^1.0.14",
+    "dateformat": "^2.0.0",
     "extend-merge": "^1.0.3",
     "sql-dialect": "^2.0"
   },
