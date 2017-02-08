@@ -534,7 +534,7 @@ describe("Schema", function() {
           reloaded.get('tags').push({ name: 'tag4' });
           expect(reloaded.get('tags').count()).toBe(4);
 
-          reloaded.get('tags').remove(0);
+          reloaded.get('tags').unset(0);
           expect(reloaded.get('tags').count()).toBe(3);
 
           yield reloaded.broadcast();
