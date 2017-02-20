@@ -83,7 +83,11 @@ class Database extends Source {
      *
      * @var Function
      */
-    this._dialect = config.dialect || new Database._classes.dialect();
+    this.dialect(config.dialect);
+
+    if (!this._dialect) {
+      this._initDialect();
+    }
 
     var handlers = this._handlers;
 
@@ -123,12 +127,38 @@ class Database extends Source {
   }
 
   /**
-   * Returns the SQL dialect instance.
+   * Get/set the SQL dialect instance.
    *
+   * @param  Object dialect The dialect instance to set or none to get the setted one.
    * @return Object.
    */
-  dialect() {
+  dialect(dialect) {
+    if (arguments.length) {
+      this._dialect = dialect;
+      return this;
+    }
     return this._dialect;
+  }
+
+  /**
+   * Initialize a new dialect instance.
+   */
+  _initDialect() {
+    var Dialect = this.classes().dialect;
+    var dialect = new Dialect({
+      quote: function(string) {
+        return dialect.quote(String(string));
+      },
+      caster: function(value, states) {
+        var type;
+        if (!states || !states.schema) {
+          type = states.schema.type(states.name);
+        }
+        type = type ? type : this.constructor.getType(value);
+        return this.convert('datasource', type, value);
+      }
+    });
+    this._dialect = dialect;
   }
 
   /**

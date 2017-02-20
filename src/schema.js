@@ -120,7 +120,7 @@ class Schema extends BaseSchema {
       for (var entity of inserts) {
         yield this.insert(filter(entity));
         var id = entity.id() === undefined ? this.lastInsertId() : undefined;
-        entity.sync(id, {}, { exists: true });
+        entity.amend(id, {}, { exists: true });
       }
     }.bind(this));
   }
@@ -143,7 +143,7 @@ class Schema extends BaseSchema {
           throw new Error("Can't update an existing entity with a missing ID.");
         }
         yield this.update(filter(entity), {[this.key()] : id});
-        entity.sync();
+        entity.amend();
       }
     }.bind(this));
   }

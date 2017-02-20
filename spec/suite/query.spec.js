@@ -280,7 +280,7 @@ describe("Query", function() {
 
   describe(".conditions()", function() {
 
-    it("filters out according conditions", function(done) {
+    it("sets conditions", function(done) {
 
       co(function*() {
         yield this.fixtures.populate('gallery');
@@ -290,6 +290,27 @@ describe("Query", function() {
       }.bind(this)).then(function(result) {
         done();
       });
+
+    });
+
+    it("sets conditions on an relation", function(done) {
+
+      co(function*() {
+
+        yield this.fixtures.populate('gallery');
+        yield this.fixtures.populate('image');
+
+        var result = yield this.query.conditions({
+          ':or()': [
+            { ':like': [{ ':name': 'name' }, "%Bar%"] },
+            { ':like': [{ ':name': 'images.title' }, "%Vegas%"] }
+          ]
+        }).has('images').get();
+
+        expect(result.length).toBe(2);
+
+        done();
+      }.bind(this));
 
     });
 
@@ -578,6 +599,27 @@ describe("Query", function() {
       }.bind(this)).then(function(result) {
         done();
       });
+
+    });
+
+    it("finds all records with a conditions on an relation", function(done) {
+
+      co(function*() {
+
+        yield this.fixtures.populate('gallery');
+        yield this.fixtures.populate('image');
+
+        var result = yield this.query.conditions({
+          ':or()': [
+            { ':like': [{ ':name': 'name' }, "%Bar%"] },
+            { ':like': [{ ':name': 'images.title' }, "%Vegas%"] }
+          ]
+        }).has('images').count();
+
+        expect(result).toBe(2);
+
+        done();
+      }.bind(this));
 
     });
 

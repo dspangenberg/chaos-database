@@ -106,10 +106,8 @@ describe("Schema", function() {
 
         yield schema.drop();
         expect(yield this.connection.sources()).toEqual({});
-
-      }.bind(this)).then(function() {
         done();
-      });
+      }.bind(this));
 
     });
 
@@ -149,9 +147,8 @@ describe("Schema", function() {
         yield this.fixtures.populate('image', ['records']);
         yield this.fixtures.populate('image_tag', ['records']);
         yield this.fixtures.populate('tag', ['records']);
-      }.bind(this)).then(function() {
         done();
-      });
+      }.bind(this));
 
     });
 
@@ -169,11 +166,11 @@ describe("Schema", function() {
           for (var gallery of galleries) {
             for (var image of gallery.get('images')) {
               expect(image.get('gallery_id')).toBe(gallery.get('id'));
-            };
-          };
-        }.bind(this)).then(function() {
+            }
+          }
+
           done();
-        });
+        }.bind(this));
 
       });
 
@@ -188,10 +185,10 @@ describe("Schema", function() {
 
           for (var image of images) {
             expect(image.get('gallery').get('id')).toBe(image.get('gallery_id'));
-          };
-        }.bind(this)).then(function() {
+          }
+
           done();
-        });
+        }.bind(this));
 
       });
 
@@ -206,10 +203,10 @@ describe("Schema", function() {
 
           for (var gallery of galleries) {
             expect(gallery.get('detail').get('gallery_id')).toBe(gallery.get('id'));
-          };
-        }.bind(this)).then(function() {
+          }
+
           done();
-        });
+        }.bind(this));
 
       });
 
@@ -226,10 +223,10 @@ describe("Schema", function() {
             image.get('images_tags').forEach(function(image_tag, index) {
               expect(image.get('tags').get(index)).toBe(image_tag.get('tag'));
             });
-          };
-        }.bind(this)).then(function() {
+          }
+
           done();
-        });
+        }.bind(this));
 
       });
 
@@ -249,10 +246,123 @@ describe("Schema", function() {
                 expect(image_tag.get('tag').get('images').get(index2)).toBe(image_tag2.get('image'));
               });
             });
-          };
-        }.bind(this)).then(function() {
+          }
           done();
-        });
+        }.bind(this));
+
+      });
+
+      it("embeds nested hasManyTrough relationship using object hydration", function(done) {
+
+        co(function*() {
+          var model = this.image;
+          var schema = model.definition();
+          var images = yield model.all({}, { return: 'object' });
+
+          yield schema.embed(images, ['tags.images'], { fetchOptions: { return: 'object' } });
+
+          for (var image of images) {
+            image.images_tags.forEach(function(image_tag, index) {
+              expect(image.tags[index]).toBe(image_tag.tag);
+              image_tag.tag.images_tags.forEach(function(image_tag2, index2) {
+                expect(image_tag.tag.images[index2]).toBe(image_tag2.image);
+              });
+            });
+          }
+          done();
+        }.bind(this));
+
+      });
+
+    });
+
+    context("using the lazy strategy", function() {
+
+      it("embeds a hasMany relationship", function(done) {
+
+        co(function*() {
+          var model = this.gallery;
+          var schema = model.definition();
+          var galleries = yield model.all();
+
+          for (var gallery of galleries) {
+            for (var image of yield gallery.fetch('images')) {
+              expect(image.get('gallery_id')).toBe(gallery.get('id'));
+            }
+          }
+
+          done();
+        }.bind(this));
+
+      });
+
+      it("embeds a belongsTo relationship", function(done) {
+
+        co(function*() {
+          var model = this.image;
+          var schema = model.definition();
+          var images = yield model.all();
+
+          for (var image of images) {
+            expect((yield image.fetch('gallery')).get('id')).toBe(image.get('gallery_id'));
+          }
+
+          done();
+        }.bind(this));
+
+      });
+
+      it("embeds a hasOne relationship", function(done) {
+
+        co(function*() {
+          var model = this.gallery;
+          var schema = model.definition();
+          var galleries = yield model.all();
+
+          for (var gallery of galleries) {
+            expect((yield gallery.fetch('detail')).get('gallery_id')).toBe(gallery.get('id'));
+          }
+
+          done();
+        }.bind(this));
+
+      });
+
+      it("embeds a hasManyTrough relationship", function(done) {
+
+        co(function*() {
+          var model = this.image;
+          var schema = model.definition();
+          var images = yield model.all();
+
+          for (var image of images) {
+            (yield image.fetch('images_tags')).forEach(function*(image_tag, index) {
+              expect((yield image.fetch('tags')).get(index)).toBe(image_tag.get('tag'));
+            });
+          }
+
+          done();
+        }.bind(this));
+
+      });
+
+      it("embeds nested hasManyTrough relationship", function(done) {
+
+        co(function*() {
+          var model = this.image;
+          var schema = model.definition();
+          var images = yield model.all();
+
+          for (var image of images) {
+            (yield image.fetch('images_tags')).forEach(function*(image_tag, index) {
+              expect((yield image.fetch('tags')).get(index)).toBe(image_tag.get('tag'));
+              (yield image_tag.get('tag').fetch('images_tags')).forEach(function*(image_tag2, index2) {
+                expect((yield image_tag.get('tag').fetch('images')).get(index2)).toBe(image_tag2.get('image'));
+              });
+            });
+          };
+          done();
+        }.bind(this));
 
       });
 

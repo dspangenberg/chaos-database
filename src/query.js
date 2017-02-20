@@ -52,7 +52,7 @@ class Query {
     this._aliasCounter = {};
 
     /**
-     * Map beetween relation pathsand corresponding aliases.
+     * Map beetween relation paths and corresponding aliases.
      *
      * @var Object
      */
@@ -154,18 +154,24 @@ class Query {
       this._applyHas();
       this._applyLimit();
 
-      var noFields = !this.statement().data('fields').length;
-      if (noFields) {
+      var schema = this.schema();
+      var statement = this.statement();
+
+      var allFields = !statement.data('fields').length;
+      if (allFields) {
         var star = {};
         star[this.alias()] = ['*'];
-        this.statement().fields([star]);
+        statement.fields([star]);
+      }
+
+      if (statement.data('joins').length) {
+        this.group(schema.key());
       }
 
       var collection;
       var ret = options['return'];
 
-      var schema = this.schema();
-      var cursor = yield schema.connection().query(this.statement().toString(this._schemas));
+      var cursor = yield schema.connection().query(statement.toString(this._schemas, this._aliases));
 
       switch (ret) {
         case 'entity':
@@ -186,7 +192,7 @@ class Query {
 
           for (var record of cursor) {
             collection.push(model.create(record, {
-              exists: noFields ? true : null
+              exists: allFields ? true : null
             }));
           }
           break;
@@ -233,15 +239,18 @@ class Query {
    */
   count() {
     return co(function*() {
+      this._applyHas();
       var statement = this.statement();
       var counter = this.schema().connection().dialect().statement('select');
-      counter.fields({':plain': 'COUNT(*)'});
+
+      var primaryKey = statement.dialect().name(this.alias() + '.' + this.schema().key());
+      counter.fields({ ':plain': 'COUNT(DISTINCT ' + primaryKey + ')' });
       counter.data('from', statement.data('from'));
       counter.data('joins', statement.data('joins'));
       counter.data('where', statement.data('where'));
       counter.data('group', statement.data('group'));
       counter.data('having', statement.data('having'));
-      var cursor = yield this.schema().connection().query(counter.toString());
+      var cursor = yield this.schema().connection().query(counter.toString(this._schemas, this._aliases));
       var result = cursor.next();
       var key = Object.keys(result)[0]
       return Number.parseInt(result[key]);
@@ -410,7 +419,7 @@ class Query {
     if (!arguments.length) {
       return this._has;
     }
-    if (typeof has === "string" && arguments.length === 2) {
+    if (typeof has === 'string') {
       var mix = {};
       mix[has] = conditions || [];
       has = [mix];
@@ -460,6 +469,7 @@ class Query {
       var conditions = value[key];
       this.where(conditions, this.alias(key));
     }
+    this._has = [];
   }
 
   /**
@@ -569,20 +579,21 @@ class Query {
    */
   toString() {
     var statement = this._statement;
+    this._applyHas();
+    this._applyLimit();
+
     var parts = {
       fields: statement.data('fields').slice(),
       joins: statement.data('joins').slice(),
       where: statement.data('where').slice(),
       limit: statement.data('limit')
     };
-    this._applyHas();
-    this._applyLimit();
 
     var noFields = !statement.data('fields');
     if (noFields) {
       statement.fields({ [this.alias()]: ['*'] });
     }
-    var sql = statement.toString(this._schemas);
+    var sql = statement.toString(this._schemas, this._aliases);
 
     for (var name in parts) {
       statement.data(name, parts[name]);
