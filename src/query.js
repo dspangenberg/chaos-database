@@ -228,7 +228,7 @@ class Query {
   first(options) {
     return co(function*() {
       var result = yield this.get(options);
-      return Array.isArray(result) ? result[0] : result.get(0);
+      return result.length ? (Array.isArray(result) ? result[0] : result.get(0)) : null;
     }.bind(this));
   }
 

@@ -396,7 +396,7 @@ describe("Schema", function() {
           gallery_id: 3
         });
 
-        yield image.broadcast({whitelist: ['title']});
+        yield image.broadcast({ whitelist: ['title'] });
         expect(image.exists()).toBe(true);
 
         var reloaded = yield Image.load(image.id());

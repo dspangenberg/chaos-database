@@ -119,8 +119,9 @@ class Schema extends BaseSchema {
       }
       for (var entity of inserts) {
         yield this.insert(filter(entity));
-        var id = entity.id() === undefined ? this.lastInsertId() : undefined;
-        entity.amend(id, {}, { exists: true });
+        var id = entity.id();
+        id = id == null ? this.lastInsertId() : id;
+        entity.amend({[this.key()]: id}, { exists: true });
       }
     }.bind(this));
   }
