@@ -370,14 +370,14 @@ describe("Schema", function() {
 
   });
 
-  describe(".broadcast()", function() {
+  describe(".save()", function() {
 
     it("saves empty entities", function(done) {
 
       co(function*() {
         var Image = this.image;
         var image = Image.create();
-        yield image.broadcast();
+        yield image.save();
         expect(image.exists()).toBe(true);
         done();
       }.bind(this));
@@ -396,7 +396,7 @@ describe("Schema", function() {
           gallery_id: 3
         });
 
-        yield image.broadcast({ whitelist: ['title'] });
+        yield image.save({ whitelist: ['title'] });
         expect(image.exists()).toBe(true);
 
         var reloaded = yield Image.load(image.id());
@@ -477,7 +477,7 @@ describe("Schema", function() {
 
         var Image = this.image;
         var image = Image.create(data);
-        yield image.broadcast()
+        yield image.save()
         expect(image.exists()).toBe(true);
         expect(image.id()).not.toBe(null);
         expect(image.modified()).toBe(false);
@@ -491,7 +491,7 @@ describe("Schema", function() {
         });
 
         reloaded.set('title', 'Amiga 1260');
-        yield reloaded.broadcast();
+        yield reloaded.save();
         expect(reloaded.exists()).toBe(true);
         expect(reloaded.id()).toBe(image.id());
         expect(reloaded.modified()).toBe(false);
@@ -522,7 +522,7 @@ describe("Schema", function() {
 
         var Gallery = this.gallery;
         var gallery = Gallery.create(data);
-        yield gallery.broadcast();
+        yield gallery.save({embed: 'images'});
 
         expect(gallery.id()).not.toBe(null);
         for (var image of gallery.get('images')) {
@@ -550,7 +550,7 @@ describe("Schema", function() {
 
         var Image = this.image;
         var image = Image.create(data);
-        yield image.broadcast()
+        yield image.save({ embed: 'gallery' })
 
         expect(image.id()).not.toBe(null);
         expect(image.get('gallery').id()).toBe(image.get('gallery_id'));
@@ -576,7 +576,7 @@ describe("Schema", function() {
         var Gallery = this.gallery;
         var gallery = Gallery.create(data);
 
-        yield gallery.broadcast()
+        yield gallery.save({ embed: 'detail' });
 
         expect(gallery.id()).not.toBe(null);
         expect(gallery.get('detail').get('gallery_id')).toBe(gallery.id());
@@ -607,7 +607,7 @@ describe("Schema", function() {
 
           var Image = this.image;
           this.entity = Image.create(data);
-          yield this.entity.broadcast();
+          yield this.entity.save({ embed: ['gallery', 'tags']});
         }.bind(this)).then(function() {
           done();
         });
@@ -640,16 +640,16 @@ describe("Schema", function() {
 
         co(function*() {
           var Image = this.image;
-          var reloaded = yield Image.load(this.entity.id(), { embed: ['tags'] });
+          var reloaded = yield Image.load(this.entity.id(), { embed: 'tags' });
           reloaded.get('tags').push({ name: 'tag4' });
           expect(reloaded.get('tags').count()).toBe(4);
 
           reloaded.get('tags').unset(0);
           expect(reloaded.get('tags').count()).toBe(3);
 
-          yield reloaded.broadcast();
+          yield reloaded.save({ embed: 'tags' });
 
-          var persisted = yield Image.load(reloaded.id(), { embed: ['tags'] });
+          var persisted = yield Image.load(reloaded.id(), { embed: 'tags' });
 
           expect(persisted.get('tags').count()).toBe(3);
 
@@ -686,7 +686,7 @@ describe("Schema", function() {
 
         var Gallery = this.gallery;
         var gallery = Gallery.create(data);
-        yield gallery.broadcast({ embed: 'images.tags' });
+        yield gallery.save({ embed: 'images.tags' });
 
         expect(gallery.id()).not.toBe(null);
         expect(gallery.get('images').count()).toBe(1);
@@ -725,38 +725,6 @@ describe("Schema", function() {
 
   });
 
-  describe(".save()", function() {
-
-    it("saves an entity", function(done) {
-
-      co(function*() {
-        var data = {
-          name: 'amiga_1200.jpg',
-          title: 'Amiga 1200'
-        };
-
-        var Image = this.image;
-        var image = Image.create(data);
-
-        var spy = spyOn(image, 'broadcast').and.callThrough();
-
-        yield image.save({ custom: 'option' });
-        expect(image.exists()).toBe(true);
-        expect(image.id()).not.toBe(null);
-
-        expect(spy).toHaveBeenCalledWith({
-          custom: 'option',
-          embed: false
-        });
-
-      }.bind(this)).then(function() {
-        done();
-      });
-
-    });
-
-  });
-
   describe(".truncate()", function() {
 
     it("deletes an entity", function(done) {
@@ -770,7 +738,7 @@ describe("Schema", function() {
         var Image = this.image;
         var image = Image.create(data);
 
-        yield image.broadcast()
+        yield image.save()
         expect(image.exists()).toBe(true);
 
         yield image.delete();

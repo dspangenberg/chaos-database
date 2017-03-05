@@ -499,7 +499,7 @@ class Query {
    */
   _applyJoins(schema, tree, basePath, aliasFrom) {
     for (var key in tree) {
-      var childs = tree[key];
+      var children = tree[key] && tree[key].embed ? tree[key].embed : {};
       var rel = schema.relation(key);
       var path = basePath ? basePath + '.' + key : key;
       var to;
@@ -520,8 +520,8 @@ class Query {
         to = this._join(path, relTo, aliasThrough);
       }
 
-      if (childs && Object.keys(childs).length) {
-        this._applyJoins(rel.to().definition(), childs, path, to);
+      if (children && Object.keys(children).length) {
+        this._applyJoins(rel.to().definition(), children, path, to);
       }
     }
   }
