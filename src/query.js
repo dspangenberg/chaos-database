@@ -244,13 +244,13 @@ class Query {
       var counter = this.schema().connection().dialect().statement('select');
 
       var primaryKey = statement.dialect().name(this.alias() + '.' + this.schema().key());
-      counter.fields({ ':plain': 'COUNT(DISTINCT ' + primaryKey + ')' });
+      counter.fields({ ':plain': 'COUNT(DISTINCT ' + primaryKey + ') as count' });
       counter.data('from', statement.data('from'));
       counter.data('joins', statement.data('joins'));
       counter.data('where', statement.data('where'));
       counter.data('group', statement.data('group'));
       counter.data('having', statement.data('having'));
-      var cursor = yield this.schema().connection().query(counter.toString(this._schemas, this._aliases));
+      var cursor = yield this.schema().connection().query('SELECT SUM(count) FROM(' + counter.toString(this._schemas, this._aliases) + ') x');
       var result = cursor.next();
       var key = Object.keys(result)[0]
       return Number.parseInt(result[key]);
