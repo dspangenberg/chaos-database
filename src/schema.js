@@ -46,7 +46,7 @@ class Schema extends BaseSchema {
   connection(connection) {
     if (arguments.length) {
       this._connection = connection;
-      this._formatters = merge({}, this._connection.formatters(), this._formatters);
+      merge(this._formatters, this._connection.formatters());
       return this;
     }
     if (!this._connection) {
