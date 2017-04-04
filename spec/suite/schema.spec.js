@@ -61,7 +61,13 @@ describe("Schema", function() {
 
     it("correctly sets config options", function() {
 
-      var connection = { formatters: function() { return []; }};
+      class Connection {
+        formatters() {
+          return []
+        }
+      }
+
+      var connection = new Connection();
 
       var schema = new Schema({
         connection: connection,
@@ -419,7 +425,7 @@ describe("Schema", function() {
 
         schema.column('id',         { type: 'serial' });
         schema.column('name',       { type: 'string' });
-        schema.column('null',       { type: 'string' });
+        schema.column('null',       { type: 'string', null: true });
         schema.column('value',      { type: 'integer' });
         schema.column('double',     { type: 'float' });
         schema.column('revenue',    {

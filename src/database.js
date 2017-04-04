@@ -102,6 +102,11 @@ class Database extends Source {
     this.formatter('datasource', 'null',      handlers.datasource['null']);
     this.formatter('datasource', 'string',    handlers.datasource['quote']);
     this.formatter('datasource', '_default_', handlers.datasource['quote']);
+
+    this.formatter('array', 'id',     handlers.array['integer']);
+    this.formatter('array', 'serial', handlers.array['integer']);
+    this.formatter('cast', 'id',      handlers.cast['integer']);
+    this.formatter('cast', 'serial',  handlers.cast['integer']);
   }
 
   /**
