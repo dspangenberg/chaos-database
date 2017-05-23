@@ -100,6 +100,7 @@ describe("Database", function() {
       expect(this.database.convert('datasource', '_default_', 123)).toBe("'123'");
       expect(this.database.convert('datasource', '_undefined_', 123)).toBe("'123'");
       expect(this.database.convert('datasource', 'serial', { ':plain': 'default' })).toBe('default');
+      expect(this.database.convert('datasource', 'json', [1,2])).toBe("'[1,2]'");
 
     });
 

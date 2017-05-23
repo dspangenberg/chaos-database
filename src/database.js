@@ -101,6 +101,7 @@ class Database extends Source {
     this.formatter('datasource', 'boolean',   handlers.datasource['boolean']);
     this.formatter('datasource', 'null',      handlers.datasource['null']);
     this.formatter('datasource', 'string',    handlers.datasource['quote']);
+    this.formatter('datasource', 'json',      handlers.datasource['json']);
     this.formatter('datasource', '_default_', handlers.datasource['quote']);
 
     this.formatter('array', 'id',     handlers.array['integer']);
@@ -155,12 +156,10 @@ class Database extends Source {
         return dialect.quote(String(string));
       },
       caster: function(value, states) {
-        var type;
-        if (!states || !states.schema) {
-          type = states.schema.type(states.name);
+        if (states & states.schema) {
+          return states.schema.format('datasource', states.name, value);
         }
-        type = type ? type : this.constructor.getType(value);
-        return this.convert('datasource', type, value);
+        return this.convert('datasource', this.constructor.getType(value), value);
       }
     });
     this._dialect = dialect;
@@ -252,7 +251,13 @@ class Database extends Source {
         },
         'null': function(value, options) {
           return 'NULL';
-        }
+        },
+        'json': function(value, options) {
+          if (value && value.data) {
+            value = value.data();
+          }
+          return this.dialect().quote(JSON.stringify(value));
+        }.bind(this)
       }
     });
   }

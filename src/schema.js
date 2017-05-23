@@ -96,7 +96,7 @@ class Schema extends BaseSchema {
       var query = this.connection().dialect().statement('create table', { schema: this });
       query.ifNotExists(options.soft)
            .table(this._source)
-           .columns(this.columns())
+           .columns(this.columns(true))
            .constraints(this.meta('constraints'))
            .meta(this.meta('table'));
 
@@ -264,6 +264,7 @@ class Schema extends BaseSchema {
    */
   convert(mode, type, value, options) {
     var formatter;
+    type = value === null ? 'null' : type;
     if (value !== null && typeof value === 'object' && value.constructor === Object) {
       var key = Object.keys(value)[0];
       var connection = this._connection;
