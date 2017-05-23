@@ -173,6 +173,8 @@ class Query {
 
       var cursor = yield schema.connection().query(statement.toString(this._schemas, this._aliases));
 
+      var key = schema.key();
+
       switch (ret) {
         case 'entity':
           var model = this.model();
@@ -192,7 +194,7 @@ class Query {
 
           for (var record of cursor) {
             collection.push(model.create(record, {
-              exists: allFields ? true : null
+              exists: record[key] !== undefined ? true : null
             }));
           }
           break;
