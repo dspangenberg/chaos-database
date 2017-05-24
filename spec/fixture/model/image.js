@@ -9,7 +9,7 @@ class Image extends Model {
     schema.column('name', { type: 'string', null: true });
     schema.column('title', { type: 'string', length: 50, null: true });
 
-    schema.belongsTo('gallery', 'Gallery', { keys: { gallery_id: 'id' } });
+    schema.belongsTo('gallery', 'Gallery', { keys: { gallery_id: 'id' }, null: true });
     schema.hasMany('images_tags', 'ImageTag', { keys: { id: 'image_id' } });
     schema.hasManyThrough('tags', 'images_tags', 'tag');
   }
