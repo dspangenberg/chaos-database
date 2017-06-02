@@ -218,9 +218,6 @@ class Database extends Source {
   _handlers() {
     return extend({}, super._handlers(), {
       datasource: {
-        'string': function(value, options) {
-          return String(value);
-        },
         'decimal': function(value, options) {
           var defaults = { precision: 2 };
           options = extend({}, defaults, options);
