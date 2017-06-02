@@ -216,7 +216,7 @@ class Database extends Source {
    * @return Object
    */
   _handlers() {
-    return extend({}, super._handlers(), {
+    return merge({}, super._handlers(), {
       datasource: {
         'decimal': function(value, options) {
           var defaults = { precision: 2 };
