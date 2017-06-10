@@ -70,6 +70,12 @@ class Database extends Source {
     this._lastInsertId = undefined;
 
     /**
+     * The transaction level
+     *
+     */
+    this._transactionLevel = 0;
+
+    /**
      * Stores configuration information for object instances at time of construction.
      *
      * @var Object
@@ -166,6 +172,106 @@ class Database extends Source {
   }
 
   /**
+   * Returns the last inserted record ID from the database.
+   *
+   * @return mixed The last inserted record ID.
+   */
+  lastInsertId() {
+    return this._lastInsertId;
+  }
+
+  /**
+   * Start a new database transaction.
+   *
+   * return Promise
+   * @throws Error
+   */
+  beginTransaction() {
+    return co(function*() {
+      if (this._transactionLevel === 0) {
+        yield this.openTransaction();
+      } else if (this._transactionLevel >0 && this.constructor.enabled('savepoints')) {
+        var name = 'TRANS' + (this._transactionLevel + 1);
+        yield this.execute("SAVEPOINT " + name);
+      }
+      this._transactionLevel++;
+    }.bind(this));
+  }
+
+  /**
+   * Execute a Closure within a transaction.
+   *
+   * @param  Closure transaction
+   * @param  Integer maxRepeat
+   * @return Promise
+   *
+   * @throws Error
+   */
+  transaction(transaction, maxRepeat) {
+    return co(function*() {
+      maxRepeat = maxRepeat || 1;
+      for (var count = 1; count <= maxRepeat; count++) {
+        yield this.beginTransaction();
+        try {
+          yield transaction(this);
+        } catch (exception) {
+          yield this.rollback();
+          throw exception;
+        }
+        try {
+          yield this.commit();
+        } catch (exception) {
+          this._transactionException(exception, count, maxRepeat);
+        }
+      }
+    }.bind(this));
+  }
+
+  /**
+   * Get the number of active transactions.
+   *
+   * @return Integer
+   */
+  transactionLevel() {
+    return this._transactionLevel;
+  }
+
+  /**
+   * Commit the active database transaction.
+   */
+  commit() {
+    return co(function*() {
+      if (this._transactionLevel > 0) {
+        this._transactionLevel--;
+      }
+      if (this._transactionLevel === 0) {
+        yield this.execute("COMMIT");
+      }
+    }.bind(this));
+  }
+
+  /**
+   * Rollback the active database transaction.
+   *
+   * @param Integer|none toLevel
+   */
+  rollback(toLevel) {
+    return co(function*() {
+      toLevel = !arguments.length ? this._transactionLevel - 1 : toLevel;
+      if (toLevel < 0 || toLevel >= this._transactionLevel) {
+        return;
+      }
+      if (toLevel === 0) {
+        yield this.execute("ROLLBACK");
+      } else if (this.constructor.enabled('savepoints')) {
+        var name = 'TRANS' + (toLevel + 1);
+        yield this.execute("ROLLBACK TO SAVEPOINT " + name);
+      }
+      this._transactionLevel = toLevel;
+    }.bind(this));
+  }
+
+  /**
    * Gets the column schema for a given MySQL table.
    *
    * @param  mixed    name    Specifies the table name for which the schema should be returned.
@@ -208,6 +314,25 @@ class Database extends Source {
       }
       return sources;
     }.bind(this));
+  }
+
+  /**
+   * Formats a value according to its definition.
+   *
+   * @param  String mode  The format mode (i.e. `'cast'` or `'datasource'`).
+   * @param  String type  The type name.
+   * @param  mixed  value The value to format.
+   * @return mixed        The formated value.
+   */
+  convert(mode, type, value, options) {
+    if (value !== null && typeof value === 'object' && value.constructor === Object) {
+      var key = Object.keys(value)[0];
+      var dialect = this.dialect();
+      if (dialect && dialect.isOperator(key)) {
+        return dialect.format(key, value[key]);
+      }
+    }
+    return super.convert(mode, type, value, options);
   }
 
   /**
@@ -260,31 +385,73 @@ class Database extends Source {
   }
 
   /**
-   * Formats a value according to its definition.
+   * Handle an exception encountered when running a transacted statement.
    *
-   * @param  String mode  The format mode (i.e. `'cast'` or `'datasource'`).
-   * @param  String type  The type name.
-   * @param  mixed  value The value to format.
-   * @return mixed        The formated value.
+   * @param  Error   exception
+   * @param  Integer count
+   * @param  Integer maxRepeat
+   *
+   * @throws Error
    */
-  convert(mode, type, value, options) {
-    if (value !== null && typeof value === 'object' && value.constructor === Object) {
-      var key = Object.keys(value)[0];
-      var dialect = this.dialect();
-      if (dialect && dialect.isOperator(key)) {
-        return dialect.format(key, value[key]);
-      }
+  _transactionException(exception, count, maxRepeat) {
+    if (this.constructor.isDeadlockException(exception)) {
+      this._transactionLevel--;
+      throw exception;
     }
-    return super.convert(mode, type, value, options);
+    this.rollback();
+    if (count >= maxRepeat) {
+      throw exception;
+    }
   }
 
   /**
-   * Returns the last inserted record ID from the database.
+   * Check a lost connection exception.
    *
-   * @return mixed The last inserted record ID.
+   * @param  Error   exception
+   * @return Boolean
    */
-  lastInsertId() {
-    return this._lastInsertId;
+  static isLostConnectionException(exception) {
+    var message = exception.message.toLowerCase();
+    for (var needle of [
+      'no connection to the server',                 // PDO
+      'server has gone away',                        // MySQL
+      'lost connection',                             // MySQL
+      'resource deadlock avoided',                   // MySQL
+      'Transaction() on null',                       // MySQL
+      'decryption failed or bad record mac',         // PostgreSQL
+      'server closed the connection unexpectedly',   // PostgreSQL
+      'ssl connection has been closed unexpectedly', // PostgreSQL
+      'is dead or not enabled'                       // SQL Server
+    ]) {
+      if (message.indexOf(needle) !== -1) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Determine if the given exception was caused by a deadlock.
+   *
+   * @param  Error   exception
+   * @return boolean
+   */
+  static isDeadlockException(exception) {
+    var message = exception.message.toLowerCase();
+    for (var needle of [
+      'deadlock found when trying to get lock', // MySQL
+      'deadlock detected',                      // PostgreSQL
+      'has been chosen as the deadlock victim', // SQL Server
+      'the database file is locked',            // SQLite
+      'database is locked',                     // SQLite
+      'database table is locked',               // SQLite
+      'a table in the database is locked'       // SQLite
+    ]) {
+      if (message.indexOf(needle) !== -1) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 

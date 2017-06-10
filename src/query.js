@@ -379,6 +379,18 @@ class Query {
   }
 
   /**
+   * Set the lock mode.
+   *
+   * @param  mixed mode The lock mode or `false` to disable it.
+   * @return self
+   */
+  lock(mode) {
+    mode = mode || 'update';
+    this.statement().lock(mode);
+    return this;
+  }
+
+  /**
    * Applies a query handler
    *
    * @param  Closure  closure A closure.

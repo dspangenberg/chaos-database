@@ -21,6 +21,7 @@ class Sqlite extends Database {
     var features = {
       arrays: false,
       transactions: true,
+      savepoints: true,
       booleans: true,
       default: false
     };
@@ -148,6 +149,15 @@ class Sqlite extends Database {
   }
 
   /**
+   * Opens a transaction
+   *
+   * @return Promise
+   */
+  openTransaction() {
+    return this.execute('BEGIN TRANSACTION');
+  }
+
+  /**
    * Finds records using a SQL query.
    *
    * @param  string sql  SQL query to execute.
@@ -165,7 +175,8 @@ class Sqlite extends Database {
 
       var response = function(err, data) {
         if (err) {
-          return reject(err);
+          reject(err);
+          return;
         }
         if (typeof this.lastID !== undefined) {
           self._lastInsertId = this.lastID;
@@ -180,6 +191,27 @@ class Sqlite extends Database {
         } else {
           client.run(sql, response);
         }
+      });
+    });
+  }
+
+  /**
+   * Execute a raw query.
+   *
+   * @param  string  sql SQL query to execute.
+   * @return Promise
+   */
+  execute(sql) {
+    var self = this;
+    return new Promise(function(accept, reject) {
+      self.connect().then(function(client) {
+        client.run(sql, function(err, data) {
+          if (err) {
+            reject(err);
+            return;
+          }
+          accept();
+        });
       });
     });
   }

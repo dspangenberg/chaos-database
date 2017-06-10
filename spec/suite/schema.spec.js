@@ -729,6 +729,115 @@ describe("Schema", function() {
 
     });
 
+    context("with transactions", function() {
+
+      it("commits on success", function(done) {
+
+        co(function*() {
+          var id;
+          yield this.connection.transaction(function() {
+            return co(function*() {
+              var image = this.image.create();
+              yield image.save();
+              id = image.id();
+            }.bind(this));
+          }.bind(this));
+          expect(yield this.image.load(id)).toBeAnInstanceOf(this.image);
+          expect(this.connection.transactionLevel()).toBe(0);
+          done();
+        }.bind(this));
+
+      });
+
+      it("allows manual commit", function(done) {
+
+        co(function*() {
+          var image = this.image.create();
+          yield this.connection.beginTransaction();
+          yield image.save();
+
+          var id = image.id();
+          yield this.connection.commit();
+          expect(yield this.image.load(id)).toBeAnInstanceOf(this.image);
+          expect(this.connection.transactionLevel()).toBe(0);
+          done();
+        }.bind(this));
+
+      });
+
+      it("rollbacks on error", function(done) {
+
+        co(function*() {
+          var id;
+          var closure = function() {
+            return this.connection.transaction(function() {
+              return co(function*() {
+                var image = this.image.create();
+                yield image.save();
+                id = image.id();
+                throw new Error('Error Processing.');
+              }.bind(this));
+            }.bind(this)).catch(function(exception) {
+            });
+          }.bind(this);
+
+          try {
+            yield closure();
+          } catch (exception) {
+            expect(exception).toEqual(new Error('Error Processing.'));
+          }
+          expect(yield this.image.load(id)).toBe(null);
+          expect(this.connection.transactionLevel()).toBe(0);
+          done();
+        }.bind(this));
+
+      });
+
+      it("allows manual rollback", function(done) {
+
+        co(function*() {
+          var image = this.image.create();
+          yield this.connection.beginTransaction();
+          yield image.save();
+          id = image.id();
+          yield this.connection.rollback();
+          expect(yield this.image.load(id)).toBe(null);
+          expect(this.connection.transactionLevel()).toBe(0);
+          done();
+        }.bind(this));
+
+      });
+
+      it("supports save points", function(done) {
+
+        co(function*() {
+          var image = this.image.create({ name: 'Initial' });
+          yield image.save();
+          id = image.id();
+          yield this.connection.beginTransaction();
+          image.set('name', 'Update1');
+          yield image.save();
+          yield this.connection.beginTransaction();
+          image.set('name', 'Update2');
+          yield image.save();
+          yield this.connection.beginTransaction();
+          image.set('name', 'Update3');
+          yield image.save();
+          expect((yield this.image.load(id)).get('name')).toBe('Update3');
+          yield this.connection.rollback(2);
+          expect((yield this.image.load(id)).get('name')).toBe('Update2');
+          yield this.connection.rollback(1);
+          expect((yield this.image.load(id)).get('name')).toBe('Update1');
+          yield this.connection.rollback();
+          expect((yield this.image.load(id)).get('name')).toBe('Initial');
+          expect(this.connection.transactionLevel()).toBe(0);
+          done();
+        }.bind(this));
+
+      });
+
+    });
+
   });
 
   describe(".truncate()", function() {
