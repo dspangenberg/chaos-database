@@ -1,6 +1,6 @@
 {
   "name": "chaos-database",
-  "version": "14.0.0",
+  "version": "14.0.1",
   "description": "Chaos ORM base classes for SQL based adapter.",
   "license": "MIT",
   "repository": {
@@ -17,7 +17,7 @@
     "co": "^4.6.0",
     "dateformat": "^2.0.0",
     "extend-merge": "^1.0.5",
-    "sql-dialect": "^4.0.4"
+    "sql-dialect": "^4.0.5"
   },
   "main": "src/index.js",
   "devDependencies": {
@@ -27,7 +27,7 @@
     "jasmine-kahlan": "^1.0.2",
     "mocha": "^3.4.2",
     "sqlite3": "^3.1.8",
-    "nyc": "^10.3.2"
+    "nyc": "^11.0.2"
   },
   "scripts": {
     "coverage-report": "nyc --reporter=lcov mocha",
