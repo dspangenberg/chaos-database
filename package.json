@@ -16,6 +16,7 @@
     "chaos-orm": "^14.0",
     "co": "^4.6.0",
     "dateformat": "^2.0.0",
+    "dateparse": "0.0.1",
     "extend-merge": "^1.0.5",
     "sql-dialect": "^4.0.5"
   },

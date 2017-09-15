@@ -1,5 +1,6 @@
 var co = require('co');
 var dateFormat = require('dateformat');
+var dateParse = require('dateparse');
 var extend = require('extend-merge').extend;
 var merge = require('extend-merge').merge;
 var Dialect = require('sql-dialect').Dialect;
@@ -362,7 +363,7 @@ class Database extends Source {
           if (Number(Number.parseInt(value)) === value) {
             value = Number.parseInt(value) * 1000;
           }
-          var date = !(value instanceof Date) ? new Date(value) : value;
+          var date = dateParse(value, true);
           if (Number.isNaN(date.getTime())) {
             throw new Error("Invalid date `" + value + "`, can't be parsed.");
           }
