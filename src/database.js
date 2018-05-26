@@ -360,9 +360,6 @@ class Database extends Source {
         'datetime': function(value, options) {
           options = options || {};
           options.format = options.format ? options.format : 'yyyy-mm-dd HH:MM:ss';
-          if (Number(Number.parseInt(value)) === value) {
-            value = Number.parseInt(value) * 1000;
-          }
           var date = dateParse(value, true);
           if (Number.isNaN(date.getTime())) {
             throw new Error("Invalid date `" + value + "`, can't be parsed.");

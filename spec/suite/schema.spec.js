@@ -117,7 +117,7 @@ describe("Schema", function() {
 
     });
 
-    it("throw an exception when source is not set", function(done) {
+    it("throws an exception when source is not set on create", function(done) {
 
       co(function*() {
         var schema = new Schema({ connection: this.connection });
@@ -129,7 +129,7 @@ describe("Schema", function() {
 
     });
 
-    it("throw an exception when source is not set", function(done) {
+    it("throws an exception when source is not set on drop", function(done) {
 
       co(function*() {
         var schema = new Schema({ connection: this.connection });
