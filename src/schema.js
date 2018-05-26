@@ -254,6 +254,37 @@ class Schema extends BaseSchema {
   }
 
   /**
+   * Returns the schema default values.
+   *
+   * @param  String basePath The basePath to extract default values from.
+   * @return mixed           Returns all default values.
+   */
+  defaults(basePath) {
+    var defaults = {};
+    for (var [name, value] of this._columns) {
+      if (basePath && name.indexOf(basePath) !== 0) {
+        continue;
+      }
+      var fieldName = basePath ? name.substr(basePath.length + 1) : name;
+      if (!fieldName || fieldName === '*' || fieldName.indexOf('.') !== -1) {
+        continue;
+      }
+      if (value['default'] !== undefined) {
+        if (value !== null && typeof value === 'object' && value.constructor === Object) {
+          var operator = Object.keys(value)[0];
+          var connection = this._connection;
+          if (!connection || !connection.dialect().isOperator(operator)) {
+            defaults[fieldName] = value['default'];
+          }
+        } else {
+          defaults[fieldName] = value['default'];
+        }
+      }
+    }
+    return defaults;
+  }
+
+  /**
    * Formats a value according to its type.
    *
    * @param   String mode    The format mode (i.e. `'cast'` or `'datasource'`).
@@ -266,10 +297,10 @@ class Schema extends BaseSchema {
     var formatter;
     type = value === null ? 'null' : type;
     if (value !== null && typeof value === 'object' && value.constructor === Object) {
-      var key = Object.keys(value)[0];
+      var operator = Object.keys(value)[0];
       var connection = this._connection;
-      if (connection && connection.dialect().isOperator(key)) {
-        return connection.dialect().format(key, value[key]);
+      if (connection && connection.dialect().isOperator(operator)) {
+        return connection.dialect().format(operator, value[operator]);
       }
     }
     if (this._formatters[mode] && this._formatters[mode][type]) {

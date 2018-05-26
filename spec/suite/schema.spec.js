@@ -143,6 +143,23 @@ describe("Schema", function() {
 
   });
 
+  describe(".defaults()", function() {
+
+    it("returns defaults", function() {
+
+      var schema = new Schema({ connection: this.connection });
+      schema.column('name', { type: 'string', default: 'Enter The Name Here' });
+      schema.column('title', { type: 'string', default: 'Enter The Title Here', length: 50 });
+
+      expect(schema.defaults()).toEqual({
+        name: 'Enter The Name Here',
+        title: 'Enter The Title Here'
+      });
+
+    });
+
+  });
+
   context("with all data populated", function() {
 
     beforeEach(function(done) {
