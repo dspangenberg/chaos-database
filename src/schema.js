@@ -271,7 +271,7 @@ class Schema extends BaseSchema {
       }
       if (value['default'] !== undefined) {
         if (value !== null && typeof value === 'object' && value.constructor === Object) {
-          var operator = Object.keys(value)[0];
+          var operator = Object.keys(value['default'])[0];
           var connection = this._connection;
           if (!connection || !connection.dialect().isOperator(operator)) {
             defaults[fieldName] = value['default'];

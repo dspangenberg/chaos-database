@@ -150,6 +150,8 @@ describe("Schema", function() {
       var schema = new Schema({ connection: this.connection });
       schema.column('name', { type: 'string', default: 'Enter The Name Here' });
       schema.column('title', { type: 'string', default: 'Enter The Title Here', length: 50 });
+      schema.column('updatedAt', { type: 'datetime', default: { ':plain': 'CURRENT_TIMESTAMP' } });
+      schema.column('createdAt', { type: 'datetime', default: { ':plain': 'CURRENT_TIMESTAMP' } });
 
       expect(schema.defaults()).toEqual({
         name: 'Enter The Name Here',
